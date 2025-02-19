@@ -26,7 +26,7 @@ Present Present_orig = 0;
 hCreateFileA CreateFileA_orig = 0;
 hPostQuitMessage PostQuitMessage_orig = 0;
 WNDPROC oWndProc;
-char* str_version = "TMStuff 1.2_pub_a1\ngreffmaster 2024/2025\n";
+char* str_version = "TMStuff 1.2_a2\ngreffmaster 2024/2025\n";
 char* str_build = "Build: " __TIME__ ", " __DATE__ "\n";
 bool show_info = false;
 bool is_picking = false;

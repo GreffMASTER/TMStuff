@@ -1,11 +1,12 @@
 ## Code::Blocks project files
-*.cbp
+## *.cbp
 *.depend
 *.layout
 
 ## Builds
 bin/
 obj/
+build/
 
 ## DirectX Stuff
 DXSDK/

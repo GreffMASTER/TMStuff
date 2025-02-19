@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="TMStuff" />
+		<Option pch_mode="2" />
+		<Option compiler="gnu_gcc_cross_compiler_32_bit" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/TMStuff" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="3" />
+				<Option compiler="gnu_gcc_cross_compiler_32_bit" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-Wall" />
+					<Add option="-std=c17" />
+					<Add option="-m32" />
+					<Add option="-g" />
+					<Add option="-DBUILD_DLL" />
+					<Add directory="DXSDK/Include" />
+					<Add directory="imgui" />
+				</Compiler>
+				<ResourceCompiler>
+					<Add directory="DXSDK/Include" />
+				</ResourceCompiler>
+				<Linker>
+					<Add option="-static" />
+					<Add option="-m32" />
+					<Add library="user32" />
+					<Add library="gdi32" />
+					<Add library="dwmapi" />
+					<Add library="d3d9" />
+					<Add directory="DXSDK/Lib" />
+				</Linker>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/TMStuff" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="3" />
+				<Option compiler="gnu_gcc_cross_compiler_32_bit" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-Wall" />
+					<Add option="-std=c17" />
+					<Add option="-m32" />
+					<Add option="-DBUILD_DLL" />
+					<Add directory="DXSDK/Include" />
+					<Add directory="imgui" />
+				</Compiler>
+				<ResourceCompiler>
+					<Add directory="DXSDK/Include" />
+				</ResourceCompiler>
+				<Linker>
+					<Add option="-s" />
+					<Add option="-static" />
+					<Add option="-m32" />
+					<Add library="user32" />
+					<Add library="gdi32" />
+					<Add library="dwmapi" />
+					<Add library="d3d9" />
+					<Add directory="DXSDK/Lib" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-O2" />
+			<Add option="-Wall" />
+			<Add option="-std=c17" />
+			<Add option="-m32" />
+			<Add option="-DBUILD_DLL" />
+		</Compiler>
+		<Linker>
+			<Add option="-s" />
+			<Add option="-static" />
+			<Add option="-m32" />
+			<Add library="user32" />
+		</Linker>
+		<Unit filename="GameBox/include/ClassicArchive.h" />
+		<Unit filename="GameBox/include/FastArray.h" />
+		<Unit filename="GameBox/include/FastBuffer.h" />
+		<Unit filename="GameBox/include/FastString.h" />
+		<Unit filename="GameBox/include/GameProcess.h" />
+		<Unit filename="GameBox/include/GbxTools.h" />
+		<Unit filename="GameBox/include/GbxTypes.h" />
+		<Unit filename="GameBox/include/GmVec2.h" />
+		<Unit filename="GameBox/include/GmVec3.h" />
+		<Unit filename="GameBox/include/GmVec4.h" />
+		<Unit filename="GameBox/include/HmsViewport.h" />
+		<Unit filename="GameBox/include/MwClassInfo.h" />
+		<Unit filename="GameBox/include/MwCmdContainer.h" />
+		<Unit filename="GameBox/include/MwEngine.h" />
+		<Unit filename="GameBox/include/MwEngineInfo.h" />
+		<Unit filename="GameBox/include/MwEngineMain.h" />
+		<Unit filename="GameBox/include/MwEngineManager.h" />
+		<Unit filename="GameBox/include/MwId.h" />
+		<Unit filename="GameBox/include/MwMemberInfo.h" />
+		<Unit filename="GameBox/include/MwNod.h" />
+		<Unit filename="GameBox/include/MwNodMain.h" />
+		<Unit filename="GameBox/include/MwRefBuffer.h" />
+		<Unit filename="GameBox/include/MwStack.h" />
+		<Unit filename="GameBox/include/SystemFid.h" />
+		<Unit filename="GameBox/include/VisionViewport.h" />
+		<Unit filename="GameBox/include/VisionViewportDx9.h" />
+		<Unit filename="GameBox/src/GbxTools.cpp" />
+		<Unit filename="TMStuff.cpp" />
+		<Unit filename="TMStuff.h" />
+		<Unit filename="TMStuffConfig.cpp" />
+		<Unit filename="TMStuffConfig.h" />
+		<Unit filename="TMStuffImGuiStyle.cpp" />
+		<Unit filename="TMStuffImGuiStyle.h" />
+		<Unit filename="imgui/backends/imgui_impl_dx9.cpp" />
+		<Unit filename="imgui/backends/imgui_impl_dx9.h" />
+		<Unit filename="imgui/backends/imgui_impl_win32.cpp" />
+		<Unit filename="imgui/backends/imgui_impl_win32.h" />
+		<Unit filename="imgui/imconfig.h" />
+		<Unit filename="imgui/imgui.cpp" />
+		<Unit filename="imgui/imgui.h" />
+		<Unit filename="imgui/imgui_demo.cpp" />
+		<Unit filename="imgui/imgui_draw.cpp" />
+		<Unit filename="imgui/imgui_internal.h" />
+		<Unit filename="imgui/imgui_tables.cpp" />
+		<Unit filename="imgui/imgui_widgets.cpp" />
+		<Unit filename="imgui/imstb_rectpack.h" />
+		<Unit filename="imgui/imstb_textedit.h" />
+		<Unit filename="imgui/imstb_truetype.h" />
+		<Unit filename="main.cpp" />
+		<Unit filename="main.h" />
+		<Unit filename="mainthread.cpp" />
+		<Unit filename="mainthread.h" />
+		<Unit filename="minhook/include/MinHook.h" />
+		<Unit filename="minhook/src/buffer.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="minhook/src/buffer.h" />
+		<Unit filename="minhook/src/hde/hde32.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="minhook/src/hde/hde32.h" />
+		<Unit filename="minhook/src/hde/hde64.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="minhook/src/hde/hde64.h" />
+		<Unit filename="minhook/src/hde/pstdint.h" />
+		<Unit filename="minhook/src/hde/table32.h" />
+		<Unit filename="minhook/src/hde/table64.h" />
+		<Unit filename="minhook/src/hook.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="minhook/src/trampoline.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="minhook/src/trampoline.h" />
+		<Extensions>
+			<lib_finder disable_auto="1" />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

@@ -305,9 +305,11 @@ void DoClassAuto(CMwNod* nod, CMwClassInfo* nod_class_info, TMStuff::MwNodWindow
     for(int i=0;i<nod_class_info->m_MemberCount;i++)
     {
         SMwMemberInfo* member = nod_class_info->m_MemberInfos[i];
-        switch(member->memberId) // member id blacklist for broken members (THANKS NANDO!)
+        switch(member->memberId) // member id blacklist for broken virtual members (THANKS NANDO!)
         {
-            case 0x904f010: // when trying to access it, it forcfully tries to get a value from an object that might be null, fantastic
+            case 0x07001011: // when style is empty, it tries to dereference a nullptr, fantastic (temporary, this nod is kinda important)
+            case 0x07001012: // when trying to access it, it forcfully tries to get a value from an object that might be a nullptr, fantastic
+            case 0x0904f010: // when trying to access it, it forcfully tries to get a value from an object that might be a nullptr... again, fantastic
                 continue;
         }
         ImGui::Text("(%s%s %s%s %s%s %s%s)",
