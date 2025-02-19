@@ -16,7 +16,7 @@ It functions as a ImGui overlay.
 
 
 ## Installation
-A patched version of TrackMania 1.0 is required. This tool will not work on any other executable.  
+A StarForce patched version of TrackMania 1.0 is required, specifically patch by iMMERSION. This tool will not work on any other executable.  
 The compiled TMStuff DLL needs to be injected into TrackMania.exe during runtime using a third party tool, like Cheat Engine.  
 Alternatively it is possible to modify TrackMania.exe import table and add the TMStuff DLL,  
 or modify the TrackMania.exe bytecode to call `LoadLibraryA()`.
@@ -33,7 +33,7 @@ You can copy address of a nod by clicking on a `Copy` button next to a nod item 
 
 
 ## Compile Requirements
-- GCC Compiler
+- GCC Compiler (32-bit, this is important!)
 - DirectX 9 SDK
 
 
