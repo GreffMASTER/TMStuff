@@ -1,0 +1,11 @@
+## Code::Blocks project files
+*.cbp
+*.depend
+*.layout
+
+## Builds
+bin/
+obj/
+
+## DirectX Stuff
+DXSDK/
