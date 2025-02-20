@@ -9,9 +9,6 @@
 #pragma comment (lib, "d3d9.lib" )
 #pragma comment (lib, "d3dx9.lib" )
 
-typedef HANDLE (APIENTRY* hCreateFileA)(LPCSTR, DWORD, DWORD, LPSECURITY_ATTRIBUTES, DWORD, DWORD, HANDLE);
-HANDLE APIENTRY CreateFileA_hook(LPCSTR, DWORD, DWORD, LPSECURITY_ATTRIBUTES, DWORD, DWORD, HANDLE);
-
 typedef void (APIENTRY* hPostQuitMessage)(int);
 void APIENTRY PostQuitMessage_hook(int);
 
@@ -31,7 +28,7 @@ typedef LRESULT(CALLBACK* WNDPROC)(HWND, UINT, WPARAM, LPARAM);
 
 extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-void c_imgui_halt(void);
+DWORD WINAPI UninitHooks();
 
 DWORD WINAPI MainThread(LPVOID param);
 

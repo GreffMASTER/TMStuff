@@ -22,10 +22,10 @@ DrawIndexedPrimitive DrawIndexedPrimitive_orig = 0;
 EndScene EndScene_orig = 0;
 Reset Reset_orig = 0;
 Present Present_orig = 0;
-
-hCreateFileA CreateFileA_orig = 0;
 hPostQuitMessage PostQuitMessage_orig = 0;
 WNDPROC oWndProc;
+DWORD* dVtable;
+
 char* str_version = "TMStuff 1.2_a2\ngreffmaster 2024/2025\n";
 char* str_build = "Build: " __TIME__ ", " __DATE__ "\n";
 bool show_info = false;
@@ -37,7 +37,7 @@ int resave_succes = -1;
 bool show_ids = false;
 bool debug = false;
 std::vector<TMStuff::MwNodWindow*> windowman;
-FILE* f;
+FILE* f; // console out
 CFastString* logfststr = (CFastString*)LOGSTRING;
 char* logstr = nullptr;
 char* resave_list_path = nullptr;
@@ -55,7 +55,7 @@ LRESULT __stdcall WndProc(const HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 	return CallWindowProc(oWndProc, hWnd, uMsg, wParam, lParam);
 }
 
-DWORD WINAPI DirectXInit(HWND win)
+DWORD WINAPI InitHooks(HWND win)
 {
 
 	while (GetModuleHandle("d3d9.dll") == 0)
@@ -94,35 +94,31 @@ DWORD WINAPI DirectXInit(HWND win)
 		return 0;
 	}
     // hooks
-	DWORD* dVtable = (DWORD*)d3ddev;
+	dVtable = (DWORD*)d3ddev;
 	dVtable = (DWORD*)dVtable[0];
 
 	EndScene_orig = (EndScene)dVtable[42];
 	DrawIndexedPrimitive_orig = (DrawIndexedPrimitive)dVtable[82];
 	Reset_orig = (Reset)dVtable[16];
 	Present_orig = (Present)dVtable[17];
-
-	//printf("ETEST %i\n", IDirect3DDevice9Vtbl->
-
-	CreateFileA_orig = CreateFileA;
 	PostQuitMessage_orig = PostQuitMessage;
 
 	if (MH_Initialize() != MH_OK) { return 1; }
-	// CreateFileA
-	if (MH_CreateHook((DWORD_PTR*)CreateFileA, (LPVOID)&CreateFileA_hook, reinterpret_cast<void**>(&CreateFileA_orig)) != MH_OK) { return 1; }
-	if (MH_EnableHook((DWORD_PTR*)CreateFileA) != MH_OK) { return 1; }
-	// ExitProcess
+	// PostQuitMessave
 	if (MH_CreateHook((DWORD_PTR*)PostQuitMessage, (LPVOID)&PostQuitMessage_hook, reinterpret_cast<void**>(&PostQuitMessage_orig)) != MH_OK) { return 1; }
 	if (MH_EnableHook((DWORD_PTR*)PostQuitMessage) != MH_OK) { return 1; }
-
-	if (MH_CreateHook((DWORD_PTR*)dVtable[42], (LPVOID)&EndScene_hook, reinterpret_cast<void**>(&EndScene_orig)) != MH_OK) { return 1; }
-	if (MH_EnableHook((DWORD_PTR*)dVtable[42]) != MH_OK) { return 1; }
-	if (MH_CreateHook((DWORD_PTR*)dVtable[82], (LPVOID)&DrawIndexedPrimitive_hook, reinterpret_cast<void**>(&DrawIndexedPrimitive_orig)) != MH_OK) { return 1; }
-	if (MH_EnableHook((DWORD_PTR*)dVtable[82]) != MH_OK) { return 1; }
+    // Reset
 	if (MH_CreateHook((DWORD_PTR*)dVtable[16], (LPVOID)&Reset_hook, reinterpret_cast<void**>(&Reset_orig)) != MH_OK) { return 1; }
 	if (MH_EnableHook((DWORD_PTR*)dVtable[16]) != MH_OK) { return 1; }
+	// Present
 	if (MH_CreateHook((DWORD_PTR*)dVtable[17], (LPVOID)&Present_hook, reinterpret_cast<void**>(&Present_orig)) != MH_OK) { return 1; }
 	if (MH_EnableHook((DWORD_PTR*)dVtable[17]) != MH_OK) { return 1; }
+	// EndScene
+	if (MH_CreateHook((DWORD_PTR*)dVtable[42], (LPVOID)&EndScene_hook, reinterpret_cast<void**>(&EndScene_orig)) != MH_OK) { return 1; }
+	if (MH_EnableHook((DWORD_PTR*)dVtable[42]) != MH_OK) { return 1; }
+	// DrawIndexedPrimitive
+	if (MH_CreateHook((DWORD_PTR*)dVtable[82], (LPVOID)&DrawIndexedPrimitive_hook, reinterpret_cast<void**>(&DrawIndexedPrimitive_orig)) != MH_OK) { return 1; }
+	if (MH_EnableHook((DWORD_PTR*)dVtable[82]) != MH_OK) { return 1; }
 
 	oWndProc = (WNDPROC)SetWindowLongPtr(win, GWL_WNDPROC, (LONG_PTR)WndProc);
 
@@ -133,15 +129,24 @@ DWORD WINAPI DirectXInit(HWND win)
 	return 1;
 }
 
-HANDLE APIENTRY CreateFileA_hook(LPCSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile)
+DWORD WINAPI UninitHooks()
 {
-    //printf("%s\n", lpFileName);
-    return CreateFileA_orig(lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
-}
+    MH_DisableHook((DWORD_PTR*)PostQuitMessage);
+    MH_RemoveHook((DWORD_PTR*)PostQuitMessage);
 
-HRESULT APIENTRY DrawIndexedPrimitive_hook(LPDIRECT3DDEVICE9 pD3D9, D3DPRIMITIVETYPE Type, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount)
-{
-	return DrawIndexedPrimitive_orig(pD3D9, Type, BaseVertexIndex, MinVertexIndex, NumVertices, startIndex, primCount);
+    MH_DisableHook((DWORD_PTR*)dVtable[16]);
+    MH_RemoveHook((DWORD_PTR*)dVtable[16]);
+
+    MH_DisableHook((DWORD_PTR*)dVtable[17]);
+    MH_RemoveHook((DWORD_PTR*)dVtable[17]);
+
+    MH_DisableHook((DWORD_PTR*)dVtable[42]);
+    MH_RemoveHook((DWORD_PTR*)dVtable[42]);
+
+    MH_DisableHook((DWORD_PTR*)dVtable[82]);
+    MH_RemoveHook((DWORD_PTR*)dVtable[82]);
+
+    return MH_Uninitialize();
 }
 
 bool menu;
@@ -180,6 +185,14 @@ bool ResaveNods() {
 }
 
 static bool init = true;
+
+HRESULT APIENTRY Reset_hook(LPDIRECT3DDEVICE9 pD3D9, D3DPRESENT_PARAMETERS* pPresentationParameters)
+{
+    ImGui_ImplDX9_InvalidateDeviceObjects();
+    HRESULT ResetReturn = Reset_orig(pD3D9, pPresentationParameters);
+    ImGui_ImplDX9_CreateDeviceObjects();
+	return ResetReturn;
+}
 
 HRESULT APIENTRY Present_hook(LPDIRECT3DDEVICE9 pD3D9, CONST RECT* pSourceRect,CONST RECT* pDestRect,HWND hDestWindowOverride,CONST RGNDATA* pDirtyRegion)
 {
@@ -488,55 +501,52 @@ HRESULT APIENTRY Present_hook(LPDIRECT3DDEVICE9 pD3D9, CONST RECT* pSourceRect,C
             ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
         }
     }
-    if(pD3D9)
-        return Present_orig(pD3D9, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion);
+    return Present_orig(pD3D9, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion);
 }
 
 HRESULT APIENTRY EndScene_hook(LPDIRECT3DDEVICE9 pD3D9)
 {
-    if(pD3D9)
-        return EndScene_orig(pD3D9);
+    return EndScene_orig(pD3D9);
 }
 
-HRESULT APIENTRY Reset_hook(LPDIRECT3DDEVICE9 pD3D9, D3DPRESENT_PARAMETERS* pPresentationParameters)
+HRESULT APIENTRY DrawIndexedPrimitive_hook(LPDIRECT3DDEVICE9 pD3D9, D3DPRIMITIVETYPE Type, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount)
 {
-    ImGui_ImplDX9_InvalidateDeviceObjects();
-    HRESULT ResetReturn = Reset_orig(pD3D9, pPresentationParameters);
-    ImGui_ImplDX9_CreateDeviceObjects();
-	return ResetReturn;
+    return DrawIndexedPrimitive_orig(pD3D9, Type, BaseVertexIndex, MinVertexIndex, NumVertices, startIndex, primCount);
 }
 
 char* cwd = 0;
 
-void c_imgui_halt(void)
-{
-    if(pick_shader)
-        pick_shader->Delete(1);
-
-
-	delete nod_window1;
-    for(int i=0;i<windowman.size();i++) {
-        TMStuff::MwNodWindow* next_window = windowman[i];
-        if(next_window) {
-            delete next_window;
-        }
-    }
-    windowman.clear();
-
-    TMStuff::Terminate();
-
-    ImGui_ImplDX9_Shutdown();
-	ImGui_ImplWin32_Shutdown();
-	ImGui::DestroyContext();
-
-    free(cwd);
-    free(resave_list_path);
-    fclose(f);
-}
-
 void APIENTRY PostQuitMessage_hook(int iExitCode)
 {
-    c_imgui_halt();
+    if(TMStuff::m_Ready) // check cuz PostQuitMessage is called multiple times
+    {
+        printf("PostQuitMessage detected, shutting down...\n");
+        printf("Freeing windows...\n");
+        delete nod_window1;
+        for(int i=0;i<windowman.size();i++) {
+            TMStuff::MwNodWindow* next_window = windowman[i];
+            if(next_window) {
+                delete next_window;
+            }
+        }
+        windowman.clear();
+
+        if(pick_shader)
+            GbxTools::MwDestroy(pick_shader);
+
+        TMStuff::Terminate();
+
+        printf("Shutting down ImGui...\n");
+        ImGui_ImplDX9_Shutdown();
+        ImGui_ImplWin32_Shutdown();
+        ImGui::DestroyContext();
+
+        free(cwd);
+        free(resave_list_path);
+        GbxTools::DeInitLog();
+        printf("Clean up complete. See ya next time!");
+        fclose(f);
+    }
     return PostQuitMessage_orig(iExitCode);
 }
 
@@ -567,7 +577,8 @@ DWORD WINAPI MainThread(LPVOID param) {
 
     CMwNodMain* main = GbxTools::GetMainNod();
     HWND hwnd = main->m_HWNDWindow;
-    DirectXInit(hwnd);
+
+    InitHooks(hwnd);
 
     TMStuff::Init();
 

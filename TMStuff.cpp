@@ -109,9 +109,11 @@ void TMStuff::InitImGui() // is called AFTER Init()
 
 void TMStuff::Terminate()
 {
-    printf("Stopping TMStuff...\n");
+    printf("Stopping TMStuff...\nSaving settings..\n");
     GbxTools::SaveNod(TMStuff::m_Config, "Config.TMStuff.Gbx", GBX_ISR | GBX_EMBEDDED);
-    TMStuff::m_Config->Delete(1);
+    printf("Saved\n");
+    GbxTools::MwDestroy(TMStuff::m_Config);
+    printf("Config freed\n");
     TMStuff::m_Config = nullptr;
     TMStuff::m_Ready = false;
     free(TMStuff::m_EngineNames);
@@ -121,6 +123,7 @@ void TMStuff::Terminate()
 	}
 	free(TMStuff::m_NumClasses);
 	free(TMStuff::m_DriveNames);
+	printf("TMStuff Terminated\n");
 }
 
 static int ImGuiCFastStringResize(ImGuiInputTextCallbackData* data)

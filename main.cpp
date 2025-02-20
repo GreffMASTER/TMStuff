@@ -14,9 +14,8 @@ extern "C" DLL_EXPORT BOOL APIENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwReason,
             break;
 
         case DLL_PROCESS_DETACH:
-            GbxTools::DeInitLog();
+            UninitHooks();
             FreeConsole();
-            c_imgui_halt();
             // detach from process
             break;
 

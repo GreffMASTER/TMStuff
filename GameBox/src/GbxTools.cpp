@@ -23,7 +23,7 @@ bool GbxTools::InitLog(char* path)
 
 bool GbxTools::DeInitLog()
 {
-    printf("DeInitLog");
+    printf("DeInitLog\n");
     if(pLogFile)
         fclose(pLogFile);
     return true;
