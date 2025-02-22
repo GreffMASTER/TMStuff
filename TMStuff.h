@@ -4,6 +4,7 @@
 #include "GameBox/include/GbxTools.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_internal.h"
+#include "imgui/misc/cpp/imgui_stdlib.h"
 
 #include "TMStuffConfig.h"
 #include "TMStuffImGuiStyle.h"
@@ -52,6 +53,7 @@ namespace TMStuff
         CMwNod* m_ParentNod;
         char* m_Title;              // window title
         char* m_PathBuffer;
+        std::string m_IdBuffer;
         int m_SetAddressBuffer;
         int m_EngineIndex = 0;
         int m_ClassIndex = 0;

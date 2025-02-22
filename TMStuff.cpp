@@ -1108,16 +1108,19 @@ void TMStuff::MwNodWindow::DoSetIdWindow()
     if(this->m_IsSetIdDialog) {
         ImGui::PushID(this);
         ImGui::Begin("Set MwId?", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-        ImGui::InputText("IdName", this->m_PathBuffer, 256);
+        ImGui::InputText("IdName", &this->m_IdBuffer);
         if(ImGui::Button("Yes##SetId")) {
+            //printf("len is: %i\n", sizeof(this->m_PathBuffer));
             if(this->m_TargetMember) {
                 CFastString* new_str = (CFastString*)malloc(sizeof(CFastString));
-                new_str->m_Str = this->m_PathBuffer;
-                new_str->m_Size = 256;
+
+                new_str->m_Str = (char*)malloc(this->m_IdBuffer.length());
+                memcpy(new_str->m_Str, this->m_IdBuffer.c_str(), this->m_IdBuffer.length());
+                new_str->m_Size = this->m_IdBuffer.length();
                 GbxTools::VirtualParam_Set_Fast(this->m_ParentNod, this->m_TargetMember, (void**)new_str);
                 //free(new_str);
             } else {
-                this->m_ParentNod->SetIdName(this->m_PathBuffer);
+                this->m_ParentNod->SetIdName((char*)this->m_IdBuffer.c_str());
             }
             this->m_TargetMember = nullptr;
             this->m_IsSetIdDialog = false;
