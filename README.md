@@ -1,6 +1,6 @@
 # TMStuff  
 Multipurpose tool for TrackMania 1.0
-
+![TMStuffScreenshot](https://github.com/user-attachments/assets/fd05815a-d2ae-43a7-a433-e6359ec773dd)
 
 ## About
 TMStuff allows for direct access to the GameBox internals inside TrackMania 1.0.  
