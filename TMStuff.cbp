@@ -19,7 +19,6 @@
 					<Add option="-m32" />
 					<Add option="-g" />
 					<Add option="-std=c++17" />
-					<Add option="-g" />
 					<Add option="-DBUILD_DLL" />
 					<Add directory="DXSDK/Include" />
 					<Add directory="imgui" />
@@ -130,6 +129,8 @@
 		<Unit filename="imgui/imstb_rectpack.h" />
 		<Unit filename="imgui/imstb_textedit.h" />
 		<Unit filename="imgui/imstb_truetype.h" />
+		<Unit filename="imgui/misc/cpp/imgui_stdlib.cpp" />
+		<Unit filename="imgui/misc/cpp/imgui_stdlib.h" />
 		<Unit filename="main.cpp" />
 		<Unit filename="main.h" />
 		<Unit filename="mainthread.cpp" />

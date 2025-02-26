@@ -308,12 +308,17 @@ void DoClassAuto(CMwNod* nod, CMwClassInfo* nod_class_info, TMStuff::MwNodWindow
     for(int i=0;i<nod_class_info->m_MemberCount;i++)
     {
         SMwMemberInfo* member = nod_class_info->m_MemberInfos[i];
+        SMwMemberInfo::eType member_type = member->type;
         switch(member->memberId) // member id blacklist for broken virtual members (THANKS NANDO!)
         {
             case 0x07001011: // when style is empty, it tries to dereference a nullptr, fantastic (temporary, this nod is kinda important)
             case 0x07001012: // when trying to access it, it forcfully tries to get a value from an object that might be a nullptr, fantastic
             case 0x0904f010: // when trying to access it, it forcfully tries to get a value from an object that might be a nullptr... again, fantastic
                 continue;
+            case 0x24001006: { // type override
+                member_type = SMwMemberInfo::NATURAL;
+                break;
+            }
         }
         ImGui::Text("(%s%s %s%s %s%s %s%s)",
             GetFlagStr(member->flags, SMwMemberInfo::eFlags::READ),
@@ -339,7 +344,7 @@ void DoClassAuto(CMwNod* nod, CMwClassInfo* nod_class_info, TMStuff::MwNodWindow
             stacc->ppMemberInfos = (SMwMemberInfo**)malloc(sizeof(SMwMemberInfo*) * stacc->m_Size);
             stacc->ppMemberInfos[0] = member;
             stacc->iCurrentPos = 0;
-            switch(member->type)
+            switch(member_type)
             {
                 case SMwMemberInfo::BOOL:
                 {
@@ -369,6 +374,7 @@ void DoClassAuto(CMwNod* nod, CMwClassInfo* nod_class_info, TMStuff::MwNodWindow
                             nodwindow->m_ParentNod = nod;
                             nodwindow->m_TargetMember = (SMwClassMemberInfo*)member;
                             nodwindow->m_IsAddDialog = true;
+                            nodwindow->m_TargetMemberIndex = buf->numElems - 1;
                         }
                         ImGui::SameLine();
                     }
@@ -428,6 +434,7 @@ void DoClassAuto(CMwNod* nod, CMwClassInfo* nod_class_info, TMStuff::MwNodWindow
                             nodwindow->m_ParentNod = nod;
                             nodwindow->m_TargetMember = (SMwClassMemberInfo*)member;
                             nodwindow->m_IsAddDialog = true;
+                            nodwindow->m_TargetMemberIndex = buf->numElems - 1;
                         }
                         ImGui::SameLine();
                     }
@@ -631,7 +638,7 @@ void DoClassAuto(CMwNod* nod, CMwClassInfo* nod_class_info, TMStuff::MwNodWindow
         // Non-virtual
         //////////////////////////
         ImGui::PushID((int)member+(int)nod);
-        switch(member->type)
+        switch(member_type)
         {
             case SMwMemberInfo::ACTION:
             {
@@ -662,6 +669,7 @@ void DoClassAuto(CMwNod* nod, CMwClassInfo* nod_class_info, TMStuff::MwNodWindow
                         nodwindow->m_ParentNod = nod;
                         nodwindow->m_TargetMember = (SMwClassMemberInfo*)member;
                         nodwindow->m_IsAddDialog = true;
+                        nodwindow->m_TargetMemberIndex = buf->numElems - 1;
                     }
                 }
                 ImGui::SameLine();
@@ -720,6 +728,7 @@ void DoClassAuto(CMwNod* nod, CMwClassInfo* nod_class_info, TMStuff::MwNodWindow
                         nodwindow->m_ParentNod = nod;
                         nodwindow->m_TargetMember = (SMwClassMemberInfo*)member;
                         nodwindow->m_IsAddDialog = true;
+                        nodwindow->m_TargetMemberIndex = buf->numElems - 1;
                     }
                     ImGui::SameLine();
                 }
@@ -1145,9 +1154,14 @@ bool TMStuff::MwNodWindow::DoSetWindow()
         ImGui::PushID(this);
         ImGui::Begin("Param Nod?", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
         ImGui::InputInt("Address##Set", &this->m_SetAddressBuffer, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
+        if(this->m_TargetMember->fieldOffset != 0xFFFFFFFF && this->m_TargetMember->flags & 0b11110000) { // has a valid offset and virtual flags, make optional
+            ImGui::SameLine();
+            ImGui::Checkbox("Use Virtual Function", &this->m_UseVirtualFunction);
+        }
         if(ImGui::Button("Yes##Set")) {
             CMwNod* target = (CMwNod*)this->m_SetAddressBuffer;
             if(this->m_IsSetDialog) {
+                // Set dialog
                 if(this->m_TargetMember->flags & SMwMemberInfo::eFlags::VIRTUAL_SET) {
                     // Is virtual (handles both ref and destroy)
                     if(this->m_TargetMember->type == SMwMemberInfo::eType::CLASSARRAY || this->m_TargetMember->type == SMwMemberInfo::eType::CLASSBUFFER) {
@@ -1170,10 +1184,13 @@ bool TMStuff::MwNodWindow::DoSetWindow()
                 }
             } else {
                 // Add dialog
+                if(this->m_TargetMemberIndex < 0)
+                    this->m_TargetMemberIndex = 0;
                 if(this->m_TargetMember) {
-                    if(this->m_TargetMember->flags & SMwMemberInfo::eFlags::VIRTUAL_ADD) {
+                    if((this->m_TargetMember->flags & SMwMemberInfo::eFlags::VIRTUAL_ADD) && this->m_UseVirtualFunction) {
                         // Is virtual
-                        GbxTools::VirtualParam_Add_Fast(this->m_ParentNod, this->m_TargetMember, (void**)target);
+                        GbxTools::VirtualParam_Add_SuperFast(this->m_ParentNod, (void**)target, 1, this->m_TargetMember);
+
                     } else {
                         printf("Add to CFastArray\n");
                         int nod_offset = this->m_TargetMember->fieldOffset;

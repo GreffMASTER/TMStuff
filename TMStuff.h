@@ -66,6 +66,7 @@ namespace TMStuff
         bool m_IsSetDialog = false;
         bool m_IsAddDialog = false;
         bool m_IsSetIdDialog = false;
+        bool m_UseVirtualFunction = true;
         bool m_Compress = true;
         bool m_Text = false;
         bool m_R = false;

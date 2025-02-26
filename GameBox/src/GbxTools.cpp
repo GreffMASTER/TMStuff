@@ -394,7 +394,7 @@ int GbxTools::VirtualParam_Set_Fast(CMwNod* nod, SMwMemberInfo* member_info, voi
 
 int GbxTools::VirtualParam_Set_SuperFast(CMwNod* nod, void** value, int argc, ...)
 {
-    printf("Calling super fast!\n");
+    printf("Calling Set super fast!\n");
     va_list argptr;
     int result = 1;
 
@@ -418,6 +418,38 @@ int GbxTools::VirtualParam_Set_SuperFast(CMwNod* nod, void** value, int argc, ..
     result = nod->VirtualParam_Set(stacc, value);
 
     va_end(argptr);
+    free(stacc->ppMemberInfos);
+    free(stacc);
+
+    return result;
+}
+
+int GbxTools::VirtualParam_Add_SuperFast(CMwNod* nod, void** value, int argc, ...)
+{
+    printf("Calling Add super fast!\n");
+    va_list argptr;
+    int result = 1;
+
+    // prepare the stacc
+    CMwStack* stacc = (CMwStack*)malloc(sizeof(CMwStack));
+    if(stacc == nullptr)
+        return 1;
+    stacc->m_Size = argc;
+
+    stacc->ppMemberInfos = (SMwMemberInfo**)malloc(sizeof(SMwMemberInfo*) * stacc->m_Size);
+
+    va_start(argptr, argc);
+    for(int i=0;i<stacc->m_Size;i++) {
+        printf("Preparing arg no. %i\n", i);
+        SMwMemberInfo* info = va_arg(argptr, SMwMemberInfo*);
+        printf("%08X\n", info);
+        stacc->ppMemberInfos[i] = info;
+    }
+    stacc->iCurrentPos = stacc->m_Size - 1;
+    printf("size: %i, position: %i\n", stacc->m_Size, stacc->iCurrentPos);
+    result = nod->VirtualParam_Add(stacc, value);
+
+
     free(stacc->ppMemberInfos);
     free(stacc);
 

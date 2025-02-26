@@ -53,6 +53,9 @@ namespace GbxTools
     int VirtualParam_Set_SuperFast(CMwNod* nod, void** value, int argc, ...); // returns 0 if ok
 
     int VirtualParam_Add_Fast(CMwNod* nod, SMwMemberInfo* member_info, void** value); // returns 0 if ok
+
+    int VirtualParam_Add_SuperFast(CMwNod* nod, void** value, int argc, ...); // returns 0 if ok
+
     int VirtualParam_Sub_Fast(CMwNod* nod, SMwMemberInfo* member_info, void** value); // returns 0 if ok
     bool SetTreePickableRecursive(CMwNod* tree);
 
