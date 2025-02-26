@@ -1,4 +1,4 @@
-# TMStuff  
+# TMStuff
 Multipurpose tool for TrackMania 1.0
 ![TMStuffScreenshot](https://github.com/user-attachments/assets/fd05815a-d2ae-43a7-a433-e6359ec773dd)
 
@@ -22,7 +22,7 @@ Alternatively it is possible to modify TrackMania.exe import table and add the T
 or modify the TrackMania.exe bytecode to call `LoadLibraryA()`.
 
 
-## Usage  
+## Usage
 When running TMStuff for the first time, a menu bar should be visible at the top of the screen.  
 You can toggle the ImGui overlay by pressing the F3 key.  
 To open the main TrackMania nod window, click on `Windows`->`TrackMania Nod`.  
@@ -37,5 +37,10 @@ You can copy address of a nod by clicking on a `Copy` button next to a nod item 
 - DirectX 9 SDK
 
 
-## Compile Instructions  
+## Compile Instructions
 TODO
+
+
+## Possible planned features
+- Lua support (probably only simple scripts, a whole plugin infrastructure is too much for now)
+- Support for other games, like TMPU, TMSU, TMSDB1 (no games that still have online servers and TMX support)
