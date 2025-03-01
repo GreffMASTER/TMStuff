@@ -15,6 +15,7 @@ namespace TMStuff
 
     extern CTMStuffConfig* m_Config;
     extern bool m_Ready;
+    extern bool m_ImGuiReady;
     extern char** m_EngineNames;
     extern int m_NumEngines;
     extern char*** m_ClassNames;

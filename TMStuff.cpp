@@ -2,6 +2,7 @@
 
 TMStuff::CTMStuffConfig* TMStuff::m_Config = nullptr;
 bool TMStuff::m_Ready = false;
+bool TMStuff::m_ImGuiReady = false;
 char** TMStuff::m_EngineNames = nullptr;
 int TMStuff::m_NumEngines = 0;
 char*** TMStuff::m_ClassNames = nullptr;
@@ -105,6 +106,8 @@ void TMStuff::InitImGui() // is called AFTER Init()
 	TMStuff::m_Config->m_ImGuiStyle->Set(TMStuff::m_Config->m_ImGuiStyle);
 
 	GbxTools::SaveNod(TMStuff::m_Config, "Config.TMStuff.Gbx", GBX_ISR | GBX_EMBEDDED);
+
+	TMStuff::m_ImGuiReady = true;
 }
 
 void TMStuff::Terminate()
@@ -116,6 +119,7 @@ void TMStuff::Terminate()
     printf("Config freed\n");
     TMStuff::m_Config = nullptr;
     TMStuff::m_Ready = false;
+    TMStuff::m_ImGuiReady = false;
     free(TMStuff::m_EngineNames);
     for(int i=0;i<TMStuff::m_NumEngines;i++) {
         free(TMStuff::m_ClassNames);
@@ -143,7 +147,7 @@ static int ImGuiCFastStringResize(ImGuiInputTextCallbackData* data)
 
 void TMStuff::CopyToClipboard(char* str, int str_size)
 {
-    HGLOBAL hMem =  GlobalAlloc(GMEM_MOVEABLE, str_size);
+    HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, str_size);
     memcpy(GlobalLock(hMem), str, str_size);
     GlobalUnlock(hMem);
     OpenClipboard(0);
@@ -1010,6 +1014,48 @@ void DoCConstructionCollectorList(CMwNod* nod, TMStuff::MwNodWindow* nodwindow)
     ImGui::PopID();
 }
 
+void DoCTrackManiaControlPlayerInput(CMwNod* nod, TMStuff::MwNodWindow* nodwindow)
+{
+    // additional data not in member infos
+    ImGui::PushID((int)nod+69423); // nice
+    SFastBuffer<CMwNod*>* buf = (SFastBuffer<CMwNod*>*)((int)nod + 0x4c);
+
+    if(ImGui::TreeNode(buf, "%s<%s> (%i)", "PocLinks", "CHmsPocLink", buf->numElems)) {
+        for(int j=0;j<buf->numElems;j++)
+        {
+            CMwNod* new_nod = buf->pElems[j];
+            ImGui::PushID(j);
+            char* class_name = "???";
+            CMwId* id = nullptr;
+            char* idname = "???";
+            if(new_nod) {
+                class_name = new_nod->MwGetClassInfo()->m_ClassName;
+                id = new_nod->MwGetId();
+                if(id) {
+                    CFastString* idstr = GbxTools::GetStringById(id);
+                    if(idstr)
+                        idname = idstr->m_Str;
+                    else
+                        idname = "Unassigned";
+                }
+            }
+            ImGui::Text("%i:", j);
+            ImGui::SameLine();
+            DoMemberClass(new_nod, idname, class_name, nodwindow);
+            ImGui::PopID();
+        }
+        ImGui::TreePop();
+    }
+
+    CMwNod** new_nod = (CMwNod**)((int)nod + 0x24);
+    DoMemberClass(*new_nod, "FastCall", "CMwCmdFastCall", nodwindow);
+
+    Natural* nval = (Natural*)((int)nod + 0x48);
+    ImGui::InputInt("SomeValue", (int*)nval, 1, 1, 0);
+
+    ImGui::PopID();
+}
+
 void DoClass(CMwNod* nod, CMwClassInfo* nod_class_info, TMStuff::MwNodWindow* nodwindow)
 {
     ImGui::PushID(nod);
@@ -1027,6 +1073,10 @@ void DoClass(CMwNod* nod, CMwClassInfo* nod_class_info, TMStuff::MwNodWindow* no
             }
             case 0x06003000: {
                 DoCHmsItem(nod, nodwindow);
+                break;
+            }
+            case 0x24032000: {
+                DoCTrackManiaControlPlayerInput(nod, nodwindow);
                 break;
             }
             case 0x24036000: {

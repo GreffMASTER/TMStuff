@@ -26,7 +26,7 @@ hPostQuitMessage PostQuitMessage_orig = 0;
 WNDPROC oWndProc;
 DWORD* dVtable;
 
-char* str_version = "TMStuff 1.2_a2\ngreffmaster 2024/2025\n";
+char* str_version = "TMStuff 1.2_a3\ngreffmaster 2024/2025\n";
 char* str_build = "Build: " __TIME__ ", " __DATE__ "\n";
 bool show_info = false;
 bool is_picking = false;
@@ -41,6 +41,7 @@ FILE* f; // console out
 CFastString* logfststr = (CFastString*)LOGSTRING;
 char* logstr = nullptr;
 char* resave_list_path = nullptr;
+bool capture_input = true;
 
 int fillmode_wired = 1;
 int fillmode_solid = 0;
@@ -48,11 +49,37 @@ CMwNod* pick_shader = nullptr;
 CMwNod* pick_shader_previous = nullptr;
 
 LRESULT __stdcall WndProc(const HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    if(!TMStuff::m_ImGuiReady && capture_input)
+        return CallWindowProcA(oWndProc, hWnd, uMsg, wParam, lParam);
 
-	if (true && ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam))
-		return true;
+	ImGuiIO& ImIo = ImGui::GetIO();
+    LRESULT ImWndProcResult = ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam);
 
-	return CallWindowProc(oWndProc, hWnd, uMsg, wParam, lParam);
+    if(uMsg >= WM_KEYFIRST && uMsg <= WM_KEYLAST) {
+        // Test Key Input
+        // To prevent typing while using ImGui interface
+        if(ImWndProcResult) {
+            return ImWndProcResult;
+        }
+        if(ImIo.WantCaptureKeyboard || !capture_input) {
+            return 0;
+        }
+    } else if(uMsg >= WM_MOUSEFIRST && uMsg <= WM_MOUSELAST) {
+        // Test Mouse Input
+        // To prevent clicking while using ImGui interface
+        if(ImWndProcResult) {
+            return ImWndProcResult;
+        }
+        if(ImIo.WantCaptureMouse || !capture_input) {
+            return 0;
+        }
+    } else {
+        if(ImWndProcResult) {
+            return ImWndProcResult;
+        }
+    }
+
+    return CallWindowProcA(oWndProc, hWnd, uMsg, wParam, lParam);
 }
 
 DWORD WINAPI InitHooks(HWND win)
@@ -269,11 +296,7 @@ HRESULT APIENTRY Present_hook(LPDIRECT3DDEVICE9 pD3D9, CONST RECT* pSourceRect,C
                 TMStuff::m_Config->m_ShowPicker = !TMStuff::m_Config->m_ShowPicker;
             }
 
-            bool* pick_on_me = nullptr;
-            CMwNod* TM = GbxTools::GetTrackManiaNod();
-            CMwNod* Viewport = *(CMwNod**)((int)TM + 0x00000044);
-            GbxTools::VirtualParam_Get_Fast(Viewport, 0x0601000b, (void**)&pick_on_me);
-            ImGui::MenuItem("Capture Mouse", "", pick_on_me);
+            ImGui::MenuItem("Capture Input", "", &capture_input);
             ImGui::EndMainMenuBar();
 
             if(!is_picking) {
