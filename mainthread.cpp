@@ -55,7 +55,17 @@ LRESULT __stdcall WndProc(const HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 	ImGuiIO& ImIo = ImGui::GetIO();
     LRESULT ImWndProcResult = ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam);
 
-    if(uMsg >= WM_KEYFIRST && uMsg <= WM_KEYLAST) {
+    if(uMsg == WM_KEYUP) {
+        switch(wParam) {
+            case VK_F3: {
+                TMStuff::m_Config->m_ShowUi = !TMStuff::m_Config->m_ShowUi;
+                // Sleep(100);
+                break;
+            }
+        }
+    }
+
+   /* if(uMsg >= WM_KEYFIRST && uMsg <= WM_KEYLAST) {
         // Test Key Input
         // To prevent typing while using ImGui interface
         if(ImWndProcResult) {
@@ -77,7 +87,7 @@ LRESULT __stdcall WndProc(const HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         if(ImWndProcResult) {
             return ImWndProcResult;
         }
-    }
+    }*/
 
     return CallWindowProcA(oWndProc, hWnd, uMsg, wParam, lParam);
 }
@@ -240,10 +250,6 @@ HRESULT APIENTRY Present_hook(LPDIRECT3DDEVICE9 pD3D9, CONST RECT* pSourceRect,C
         if (logstr != logfststr->m_Str) {
             logstr = logfststr->m_Str;
             GbxTools::PushLog(logfststr->m_Str, logfststr->m_Size);
-        }
-        if (GetAsyncKeyState(VK_F3) & 0x80000) {
-            TMStuff::m_Config->m_ShowUi = !TMStuff::m_Config->m_ShowUi;
-            Sleep(100);
         }
         // Draw
         if(TMStuff::m_Config->m_ShowUi && pD3D9 && window)
