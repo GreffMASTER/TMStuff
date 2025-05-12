@@ -88,6 +88,7 @@
 		<Unit filename="GameBox/include/GameProcess.h" />
 		<Unit filename="GameBox/include/GbxTools.h" />
 		<Unit filename="GameBox/include/GbxTypes.h" />
+		<Unit filename="GameBox/include/GmIso4.h" />
 		<Unit filename="GameBox/include/GmVec2.h" />
 		<Unit filename="GameBox/include/GmVec3.h" />
 		<Unit filename="GameBox/include/GmVec4.h" />

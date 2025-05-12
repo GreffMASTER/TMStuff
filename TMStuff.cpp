@@ -318,6 +318,9 @@ void DoClassAuto(CMwNod* nod, CMwClassInfo* nod_class_info, TMStuff::MwNodWindow
             case 0x07001011: // when style is empty, it tries to dereference a nullptr, fantastic (temporary, this nod is kinda important)
             case 0x07001012: // when trying to access it, it forcfully tries to get a value from an object that might be a nullptr, fantastic
             case 0x0904f010: // when trying to access it, it forcfully tries to get a value from an object that might be a nullptr... again, fantastic
+            case 0x09047006: //
+            case 0x09047007: //
+            case 0x09047008: // w h a t
                 continue;
             case 0x24001006: { // type override
                 member_type = SMwMemberInfo::NATURAL;
@@ -339,6 +342,8 @@ void DoClassAuto(CMwNod* nod, CMwClassInfo* nod_class_info, TMStuff::MwNodWindow
         /////////////////
         // doin
         /////////////////
+
+        // printf("%08X\n", member->memberId); // debug
 
         if(member->fieldOffset == -1 && member->type != 0) // virtual memebers
         {
@@ -621,7 +626,7 @@ void DoClassAuto(CMwNod* nod, CMwClassInfo* nod_class_info, TMStuff::MwNodWindow
                 case SMwMemberInfo::VEC4:
                 {
                     SVec4* vec = nullptr;
-                    nod->VirtualParam_Get(stacc, (void**)&vec);
+                    int res = nod->VirtualParam_Get(stacc, (void**)&vec);
                     if(ImGui::InputFloat4(member->pszName, vec->array, "%f", 0)) {
                         stacc->iCurrentPos = 0;
                         nod->VirtualParam_Set(stacc, (void**)vec);
