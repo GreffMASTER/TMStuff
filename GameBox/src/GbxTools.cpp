@@ -92,6 +92,14 @@ void GbxTools::PrintNodInfo(CMwNod* nod)
     printf("@ %08X\n", nod);
 }
 
+CMwId* GbxTools::GetMwId(CMwId* other, char* str)
+{
+
+    CMwId* (__cdecl* callable)(CMwId* in_other, char* in_str) = (CMwId* (__cdecl* )(CMwId* in_other, char* in_str))0x0043ad70; // Call function at this address
+    //printf("calling\n");
+    return callable(other, str);
+}
+
 CFastString* GbxTools::GetStringById(CMwId* id)
 {
     CFastString* (__fastcall* callable)(CMwId* in_id) = (CFastString* (__fastcall* )(CMwId* in_id))0x004dd5d0; // Call function at this address

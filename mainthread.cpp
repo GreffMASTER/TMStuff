@@ -55,11 +55,12 @@ LRESULT __stdcall WndProc(const HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 	ImGuiIO& ImIo = ImGui::GetIO();
     LRESULT ImWndProcResult = ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam);
 
-    if(uMsg == WM_KEYUP) {
+    if(uMsg == WM_KEYDOWN) {
         switch(wParam) {
             case VK_F3: {
-                TMStuff::m_Config->m_ShowUi = !TMStuff::m_Config->m_ShowUi;
-                // Sleep(100);
+                bool isRepeat = (lParam & 0xFF000000);
+                if(!isRepeat)
+                    TMStuff::m_Config->m_ShowUi = !TMStuff::m_Config->m_ShowUi;
                 break;
             }
         }

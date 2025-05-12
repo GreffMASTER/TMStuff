@@ -32,6 +32,7 @@ namespace GbxTools
     void CreateMwClassInfo(CMwClassInfo* new_class, int class_id, CMwClassInfo *parent_class, char *class_name, void *constructor);
     SMwMemberInfo* GetMemberInfoById(CMwNod* nod, int member_id);
     void PrintNodInfo(CMwNod* nod);
+    CMwId* GetMwId(CMwId* other, char* str);
     CFastString* GetStringById(CMwId* id);
 
     int LoadNod(CMwNod** nod, char* path);
