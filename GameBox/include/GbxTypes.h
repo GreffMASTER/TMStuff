@@ -24,6 +24,7 @@ class CMwClassInfo;
 
 class CClassicArchive;
 // nods
+class CMwStack;
 class CMwNod;
 class CMwNodMain;
 class CMwCmdContainer;
@@ -35,11 +36,12 @@ class CVisionViewport;
 class CVisionViewportDx9;
 class CMwEngine;
 class CMwEngineMain;
-class CMwStack;
+
 
 #include "GmVec2.h"
 #include "GmVec3.h"
 #include "GmVec4.h"
+#include "GmIso4.h"
 
 #include "MwId.h"
 #include "FastString.h"

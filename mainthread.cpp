@@ -33,7 +33,13 @@ bool is_picking = false;
 bool prev_is_mouse_down = false;
 CMwNod* pick_corpus_buffer = nullptr;
 CMwNod* pick_tree_buffer = nullptr;
+
 int resave_succes = -1;
+bool resave_compress = true;
+bool resave_text = false;
+bool resave_release = true;
+bool resave_embed = false;
+
 bool show_ids = false;
 bool debug = false;
 std::vector<TMStuff::MwNodWindow*> windowman;
@@ -56,14 +62,66 @@ LRESULT __stdcall WndProc(const HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
     LRESULT ImWndProcResult = ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam);
 
     if(uMsg == WM_KEYDOWN) {
-        switch(wParam) {
-            case VK_F3: {
-                bool isRepeat = (lParam & 0xFF000000);
-                if(!isRepeat)
+        bool isRepeat = (lParam & 0xFF000000);
+        if(!isRepeat) { // ONLY ONCE
+            switch(wParam) {
+                case VK_F3: {
                     TMStuff::m_Config->m_ShowUi = !TMStuff::m_Config->m_ShowUi;
-                break;
+                    break;
+                }
+                case VK_F1: {
+                    printf("Testing stack\n");
+                    CMwNod* test = GbxTools::GetTrackManiaNod();
+                    CMwStack* stacc = CMwStack::NewCMwStack();
+                    CFastString* str = CFastString::NewCFastString("Editor.Cursor.CursorMobil.Item.Corpuss[0].Location");
+
+                    //CFastString* str = CFastString::NewCFastString("VersionFeatures");
+                    printf("\"%s\"\n", str->m_Str);
+
+                    int res = CMwStack::Push(stacc, 0xFFFFFFFF, test, str);
+                    printf("res: %i\n", res);
+                    if(res == 0) {
+                        printf("Success!\n");
+                        printf("stacc size: %i, pos: %i\n", stacc->m_Size, stacc->iCurrentPos);
+                        for(int i=0;i<stacc->m_Size;i++) {
+                            int type = stacc->ppTypes[i];
+                            printf("\t%i:\n", i+1);
+                            printf("\t\ttype: %i\n", type);
+                            switch(type) {
+                                case 0: { //member
+                                    SMwMemberInfo* member = stacc->ppMemberInfos[i];
+                                    //printf("\t%s\n", member);
+                                    printf("\t\tname: %s (%08X)\n", member->pszName, member->memberId);
+                                    break;
+                                }
+                                case 1: { //index
+                                    int index = (int)stacc->ppMemberInfos[i];
+                                    printf("\t\tindex: %i \n", index);
+                                }
+                            }
+                        }
+
+                        int res1 = CMwNod::Param_Check(test, stacc);
+                        if(res1 == 0) {
+                            printf("Param_Check is good\n");
+                            stacc->iCurrentPos = stacc->m_Size - 1;
+                            GmIso4* val;
+                            int res2 = CMwNod::Param_Get(test, stacc, (void**)&val);
+                            if(res2)
+                                printf("param get failed\n");
+                            else
+                                printf("value=%f\n", val->X);
+                        }
+
+                    }
+
+                    stacc->Delete(1);
+                    str->Delete(1);
+                    break;
+                }
             }
         }
+
     }
 
    /* if(uMsg >= WM_KEYFIRST && uMsg <= WM_KEYLAST) {
@@ -192,7 +250,7 @@ bool menu;
 TMStuff::MwNodWindow* nod_window1 = nullptr;
 TMStuff::MwNodWindow* config_window = nullptr;
 
-bool ResaveNods() {
+bool ResaveNods(int flags) {
     bool succ = true;
     std::ifstream infile(resave_list_path);
     if(!infile.good()) {
@@ -212,7 +270,7 @@ bool ResaveNods() {
             succ = false;
             continue;
         }
-        res = GbxTools::SaveNod(list_nod, line_c_str, GBX_COMPRESS | GBX_ISR );
+        res = GbxTools::SaveNod(list_nod, line_c_str, flags );
         if(res != 1) {
             printf("Failed to save \"%s\"\n", line_c_str);
             succ = false;
@@ -299,6 +357,8 @@ HRESULT APIENTRY Present_hook(LPDIRECT3DDEVICE9 pD3D9, CONST RECT* pSourceRect,C
                 ImGui::EndMenu();
             }
 
+            //ImGui::ShowDemoWindow();
+
             if(ImGui::MenuItem("Picker", "", TMStuff::m_Config->m_ShowPicker)) {
                 TMStuff::m_Config->m_ShowPicker = !TMStuff::m_Config->m_ShowPicker;
             }
@@ -337,8 +397,26 @@ HRESULT APIENTRY Present_hook(LPDIRECT3DDEVICE9 pD3D9, CONST RECT* pSourceRect,C
                                     "Example: Speed/Media/Solid/SpeedRoadBaseAir.Solid.Gbx\n"
                                     "         Vehicles/Mobil/Vehicle/TrackManiaVehicle/American.TrackManiaVehicle.Gbx\n");
                         ImGui::InputText("List file path", resave_list_path, 256);
+                        ImGui::Checkbox("Compress##Save", &resave_compress);
+                        ImGui::SameLine();
+                        ImGui::Checkbox("Text##Save", &resave_text);
+                        ImGui::SameLine();
+                        ImGui::Checkbox("Release##Save", &resave_release);
+                        ImGui::SameLine();
+                        ImGui::Checkbox("Embed##Save", &resave_embed);
+
                         if(ImGui::Button("Resave")) {
-                            if(ResaveNods()) {
+                            int flags = 0;
+                            if(resave_compress)
+                                flags |= GBX_COMPRESS;
+                            if(resave_text)
+                                flags |= GBX_ISTEXT;
+                            if(resave_release)
+                                flags |= GBX_ISR;
+                            if(resave_embed)
+                                flags |= GBX_EMBEDDED;
+
+                            if(ResaveNods(flags)) {
                                 resave_succes = 1;
                             } else {
                                 resave_succes = 0;

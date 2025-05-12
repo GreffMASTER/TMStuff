@@ -6,7 +6,7 @@
 class CMwNod
 {
     public:
-        virtual Delete(bool smth);
+        virtual Delete(byte flags);
         virtual CMwClassInfo* MwGetClassInfo(void);
         virtual Natural GetMwClassId(void);
         virtual bool MwIsKindOf(Natural classId);
@@ -44,6 +44,37 @@ class CMwNod
         CSystemFid* m_SystemFid;
         SFastBuffer<CMwNod*>* m_Dependants;
         Natural u1;
+
+        static int Param_Get(CMwNod* nod, CMwStack* stacc, void** value)
+        {
+            int (__thiscall* callable)(CMwNod*, CMwStack*, void**) = (int (__thiscall*)(CMwNod*, CMwStack*, void**))0x004d6cb0;
+            return callable(nod, stacc, value);
+        }
+
+        static int Param_Set(CMwNod* nod, CMwStack* stacc, void** value)
+        {
+            int (__thiscall* callable)(CMwNod*, CMwStack*, void**) = (int (__thiscall*)(CMwNod*, CMwStack*, void**))0x004d6db0;
+            return callable(nod, stacc, value);
+        }
+
+        static int Param_Add(CMwNod* nod, CMwStack* stacc, void** value)
+        {
+            int (__thiscall* callable)(CMwNod*, CMwStack*, void**) = (int (__thiscall*)(CMwNod*, CMwStack*, void**))0x004d6e20;
+            return callable(nod, stacc, value);
+        }
+
+        static int Param_Sub(CMwNod* nod, CMwStack* stacc, void** value)
+        {
+            int (__thiscall* callable)(CMwNod*, CMwStack*, void**) = (int (__thiscall*)(CMwNod*, CMwStack*, void**))0x004d6e70;
+            return callable(nod, stacc, value);
+        }
+
+        static int Param_Check(CMwNod* nod, CMwStack* stacc)
+        {
+            int (__thiscall* callable)(CMwNod*, CMwStack*) = (int (__thiscall*)(CMwNod*, CMwStack*))0x004d6ec0;
+            return callable(nod, stacc);
+        }
+
 };
 
 #endif // __MWNOD_H__

@@ -13,6 +13,7 @@ class CMwStack : public CMwNod {
         int* ppTypes;
         int iCurrentPos;
 
+
         static CMwStack* NewCMwStack()
         {
             CMwStack* stacc = (CMwStack*)malloc(sizeof(CMwStack));
@@ -20,11 +21,20 @@ class CMwStack : public CMwNod {
             return callable(stacc);
         }
 
+        static int Allocate(CMwStack* stacc, int newSize)
+        {
+            int (__thiscall* callable)(CMwStack*, int) = (int (__thiscall*)(CMwStack*, int))0x004def90;
+            return callable(stacc, newSize);
+        }
+
+
         static int Push(CMwStack* stacc, int member_id, CMwNod* nod, CFastString* str)
         {
             int (__thiscall* callable)(CMwStack*, int, CMwNod*, CFastString*) = (int (__thiscall*)(CMwStack*, int, CMwNod*, CFastString*))0x004df4e0;
-            return callable(stacc, member_id, nod, str);
-
+            int res = callable(stacc, member_id, nod, str);
+            if(res == 0)
+                stacc->iCurrentPos = stacc->m_Size - 1;
+            return res;
         }
 };
 

@@ -343,11 +343,12 @@ void DoClassAuto(CMwNod* nod, CMwClassInfo* nod_class_info, TMStuff::MwNodWindow
         if(member->fieldOffset == -1 && member->type != 0) // virtual memebers
         {
             ImGui::PushID((int)member+(int)nod);
-            CMwStack* stacc = (CMwStack*)malloc(sizeof(CMwStack));
-            stacc->m_Size = 1;
-            stacc->ppMemberInfos = (SMwMemberInfo**)malloc(sizeof(SMwMemberInfo*) * stacc->m_Size);
+            // prepare the stacc
+            CMwStack* stacc = CMwStack::NewCMwStack();
+            CMwStack::Allocate(stacc, 1);
             stacc->ppMemberInfos[0] = member;
             stacc->iCurrentPos = 0;
+
             switch(member_type)
             {
                 case SMwMemberInfo::BOOL:
@@ -633,8 +634,7 @@ void DoClassAuto(CMwNod* nod, CMwClassInfo* nod_class_info, TMStuff::MwNodWindow
                     break;
                 }
             }
-            free(stacc->ppMemberInfos);
-            free(stacc);
+            stacc->Delete(1);
             ImGui::PopID();
             continue;
         }
@@ -951,6 +951,13 @@ void DoCMwNod(CMwNod* nod, TMStuff::MwNodWindow* nodwindow)
     }
 }
 
+void DoCFuncKeysReal(CMwNod* nod, TMStuff::MwNodWindow* nodwindow){
+    DoClassAuto(nod, nod->MwGetClassInfo(), nodwindow);
+    // custom display
+    CFastArray<Real>* arr = (CFastArray<Real>*)(int(nod) + 0x24);
+    ImGui::PlotLines("Graph", arr->pElems, arr->numElems);
+}
+
 void DoCHmsItem(CMwNod* nod, TMStuff::MwNodWindow* nodwindow)
 {
 
@@ -1069,6 +1076,10 @@ void DoClass(CMwNod* nod, CMwClassInfo* nod_class_info, TMStuff::MwNodWindow* no
         {
             case 0x01001000: {
                 DoCMwNod(nod, nodwindow);
+                break;
+            }
+            case 0x0501a000: {
+                DoCFuncKeysReal(nod, nodwindow);
                 break;
             }
             case 0x06003000: {
