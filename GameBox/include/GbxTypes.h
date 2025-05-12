@@ -24,8 +24,12 @@ class CMwClassInfo;
 
 class CClassicArchive;
 // nods
-class CMwStack;
 class CMwNod;
+class CMwStack;
+class CMwParam;
+class CMwParamClass;
+class CMwParamStruct;
+class CMwParamBool;
 class CMwNodMain;
 class CMwCmdContainer;
 class CGameProcess;
@@ -56,6 +60,11 @@ class CMwEngineMain;
 #include "MwEngineManager.h"
 // Nods
 #include "MwNod.h"
+#include "MwStack.h"
+#include "MwParam.h"
+#include "MwParamClass.h"
+#include "MwParamStruct.h"
+#include "MwParamBool.h"
 #include "MwNodMain.h"
 #include "MwCmdContainer.h"
 #include "GameProcess.h"
@@ -66,7 +75,7 @@ class CMwEngineMain;
 #include "VisionViewportDx9.h"
 #include "MwEngine.h"
 #include "MwEngineMain.h"
-#include "MwStack.h"
+
 
 typedef struct SVec2 {
     union {

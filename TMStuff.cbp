@@ -103,6 +103,10 @@
 		<Unit filename="GameBox/include/MwMemberInfo.h" />
 		<Unit filename="GameBox/include/MwNod.h" />
 		<Unit filename="GameBox/include/MwNodMain.h" />
+		<Unit filename="GameBox/include/MwParam.h" />
+		<Unit filename="GameBox/include/MwParamBool.h" />
+		<Unit filename="GameBox/include/MwParamClass.h" />
+		<Unit filename="GameBox/include/MwParamStruct.h" />
 		<Unit filename="GameBox/include/MwRefBuffer.h" />
 		<Unit filename="GameBox/include/MwStack.h" />
 		<Unit filename="GameBox/include/SystemFid.h" />

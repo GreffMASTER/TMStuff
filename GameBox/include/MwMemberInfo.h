@@ -1,6 +1,8 @@
 #ifndef MWMEMBERINFO_H_INCLUDED
 #define MWMEMBERINFO_H_INCLUDED
 
+#include "GbxTypes.h"
+
 typedef struct SMwMemberInfo
 {
     enum eType {
@@ -77,7 +79,7 @@ typedef struct SMwMemberInfo
     };
     eType type;
     Natural memberId;
-    void* pParam;
+    CMwParam* pParam;
     int fieldOffset;
     char* pszName;
     char* pszName2;
