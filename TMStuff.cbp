@@ -82,6 +82,7 @@
 			<Add library="user32" />
 		</Linker>
 		<Unit filename="GameBox/include/ClassicArchive.h" />
+		<Unit filename="GameBox/include/DumpTools.h" />
 		<Unit filename="GameBox/include/FastArray.h" />
 		<Unit filename="GameBox/include/FastBuffer.h" />
 		<Unit filename="GameBox/include/FastString.h" />
@@ -112,6 +113,7 @@
 		<Unit filename="GameBox/include/SystemFid.h" />
 		<Unit filename="GameBox/include/VisionViewport.h" />
 		<Unit filename="GameBox/include/VisionViewportDx9.h" />
+		<Unit filename="GameBox/src/DumpTools.cpp" />
 		<Unit filename="GameBox/src/GbxTools.cpp" />
 		<Unit filename="TMStuff.cpp" />
 		<Unit filename="TMStuff.h" />

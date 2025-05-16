@@ -9,8 +9,8 @@ class CMwClassInfo
         void** vtable;
         Natural m_ClassId;
         CMwClassInfo * m_ParentClass;
-        int u1;
-        int u2;
+        int u1; //
+        int u2; // array
         char* m_ClassName;
         CMwClassInfo * m_NextClass;
         int u3;

@@ -2,6 +2,7 @@
 
 #include "mainthread.h"
 #include "GameBox/include/GbxTools.h"
+#include "GameBox/include/DumpTools.h"
 
 #include "imgui/imgui.h"
 #include "imgui/backends/imgui_impl_dx9.h"
@@ -31,6 +32,7 @@ char* str_build = "Build: " __TIME__ ", " __DATE__ "\n";
 bool show_info = false;
 bool is_picking = false;
 bool prev_is_mouse_down = false;
+bool ask_dump_chunks = false;
 CMwNod* pick_corpus_buffer = nullptr;
 CMwNod* pick_tree_buffer = nullptr;
 
@@ -65,10 +67,6 @@ LRESULT __stdcall WndProc(const HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         bool isRepeat = (lParam & 0xFF000000);
         if(!isRepeat) { // ONLY ONCE
             switch(wParam) {
-                case VK_F3: {
-                    TMStuff::m_Config->m_ShowUi = !TMStuff::m_Config->m_ShowUi;
-                    break;
-                }
                 case VK_F1: {
                     printf("Testing stack\n");
                     CMwNod* test = GbxTools::GetTrackManiaNod();
@@ -117,6 +115,16 @@ LRESULT __stdcall WndProc(const HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
                     stacc->Delete(1);
                     str->Delete(1);
+                    break;
+                }
+                case VK_F3: {
+                    TMStuff::m_Config->m_ShowUi = !TMStuff::m_Config->m_ShowUi;
+                    break;
+                }
+                case VK_F9: {
+                    // dump it
+                    ask_dump_chunks = true;
+                    //DumpTools::DumpChunkInfos("TM1.0_ChunkInfos.xml");
                     break;
                 }
             }
@@ -445,6 +453,21 @@ HRESULT APIENTRY Present_hook(LPDIRECT3DDEVICE9 pD3D9, CONST RECT* pSourceRect,C
                     }
                     ImGui::End();
                 }
+
+                if(ask_dump_chunks) {
+                    ImGui::Begin("Dump chunk infos", &ask_dump_chunks, ImGuiWindowFlags_AlwaysAutoResize);
+                    ImGui::Text("Dumps chunk infos of all classes.\n"
+                                "WARNING! THIS *WILL* CRASH THE GAME AFTER COMPLETION!\n"
+                                "Are You Sure?");
+                    if(ImGui::Button("No"))
+                        ask_dump_chunks = false;
+                    ImGui::SameLine();
+                    if(ImGui::Button("Yes"))
+                        DumpTools::DumpChunkInfos("TM1.0_ChunkInfos.xml");
+                    ImGui::End();
+                }
+
+
 
                 // Do nod windows
                 for(int i=0;i<windowman.size();i++)
