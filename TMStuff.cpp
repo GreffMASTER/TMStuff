@@ -1228,14 +1228,13 @@ bool TMStuff::MwNodWindow::DoSetWindow()
             CMwNod* target = (CMwNod*)this->m_SetAddressBuffer;
             if(this->m_IsSetDialog) {
                 // Set dialog
-                if(this->m_TargetMember->flags & SMwMemberInfo::eFlags::VIRTUAL_SET) {
+                if(this->m_TargetMember->flags & SMwMemberInfo::eFlags::VIRTUAL_SET && this->m_UseVirtualFunction) {
                     // Is virtual (handles both ref and destroy)
                     if(this->m_TargetMember->type == SMwMemberInfo::eType::CLASSARRAY || this->m_TargetMember->type == SMwMemberInfo::eType::CLASSBUFFER) {
                         GbxTools::VirtualParam_Set_SuperFast(this->m_ParentNod, (void**)target, 2, this->m_TargetMemberIndex, this->m_TargetMember);
                     } else {
                         GbxTools::VirtualParam_Set_SuperFast(this->m_ParentNod, (void**)target, 1, this->m_TargetMember);
                     }
-
                 } else {
                     // Is not virtual
                     int nod_offset = this->m_TargetMember->fieldOffset;
