@@ -322,7 +322,10 @@ void DoClassAuto(CMwNod* nod, CMwClassInfo* nod_class_info, TMStuff::MwNodWindow
             case 0x09047007: //
             case 0x09047008: // w h a t
                 continue;
-            case 0x24001006: { // type override
+            // type overrides
+            case 0x0a031000: // CSceneToyVehicleMaterial.MaterialId
+            case 0x24001006: // CTrackMania.VersionFeatures
+            {
                 member_type = SMwMemberInfo::NATURAL;
                 break;
             }
