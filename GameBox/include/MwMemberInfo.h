@@ -68,10 +68,10 @@ typedef struct SMwMemberInfo
         PROC = 57
     };
     enum eFlags {
-        READ        = 0b00000001,
-        WRITE       = 0b00000010,
-        U1          = 0b00000100,
-        U2          = 0b00001000,
+        GET         = 0b00000001,
+        SET         = 0b00000010,
+        ADD         = 0b00000100,
+        SUB         = 0b00001000,
         VIRTUAL_GET = 0b00010000,
         VIRTUAL_SET = 0b00100000,
         VIRTUAL_ADD = 0b01000000,

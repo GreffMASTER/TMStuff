@@ -287,14 +287,14 @@ void DoMemberClass(CMwNod* nod, char* name, char* type, TMStuff::MwNodWindow* no
 
 char* GetFlagStr(int flags, SMwMemberInfo::eFlags mask)
 {
-    if(flags & mask & SMwMemberInfo::eFlags::READ)
-        return "R";
-    if(flags & mask & SMwMemberInfo::eFlags::WRITE)
-        return "W";
-    if(flags & mask & SMwMemberInfo::eFlags::U1)
-        return "1";
-    if(flags & mask & SMwMemberInfo::eFlags::U2)
-        return "2";
+    if(flags & mask & SMwMemberInfo::eFlags::GET)
+        return "G";
+    if(flags & mask & SMwMemberInfo::eFlags::SET)
+        return "S";
+    if(flags & mask & SMwMemberInfo::eFlags::ADD)
+        return "A";
+    if(flags & mask & SMwMemberInfo::eFlags::SUB)
+        return "S";
     if(flags & mask & SMwMemberInfo::eFlags::VIRTUAL_GET)
         return "G";
     if(flags & mask & SMwMemberInfo::eFlags::VIRTUAL_SET)
@@ -330,11 +330,11 @@ void DoClassAuto(CMwNod* nod, CMwClassInfo* nod_class_info, TMStuff::MwNodWindow
                 break;
             }
         }
-        ImGui::Text("(%s%s %s%s %s%s %s%s)",
-            GetFlagStr(member->flags, SMwMemberInfo::eFlags::READ),
-            GetFlagStr(member->flags, SMwMemberInfo::eFlags::WRITE),
-            GetFlagStr(member->flags, SMwMemberInfo::eFlags::U1),
-            GetFlagStr(member->flags, SMwMemberInfo::eFlags::U2),
+        ImGui::Text("(%s%s%s%s %s%s%s%s)",
+            GetFlagStr(member->flags, SMwMemberInfo::eFlags::GET),
+            GetFlagStr(member->flags, SMwMemberInfo::eFlags::SET),
+            GetFlagStr(member->flags, SMwMemberInfo::eFlags::ADD),
+            GetFlagStr(member->flags, SMwMemberInfo::eFlags::SUB),
             GetFlagStr(member->flags, SMwMemberInfo::eFlags::VIRTUAL_GET),
             GetFlagStr(member->flags, SMwMemberInfo::eFlags::VIRTUAL_SET),
             GetFlagStr(member->flags, SMwMemberInfo::eFlags::VIRTUAL_ADD),
@@ -675,7 +675,7 @@ void DoClassAuto(CMwNod* nod, CMwClassInfo* nod_class_info, TMStuff::MwNodWindow
             {
                 SMwClassArrayMemberInfo* classmember = (SMwClassArrayMemberInfo*)member;
                 CFastArray<CMwNod*>* buf = (CFastArray<CMwNod*>*)(nod_valk + (member->fieldOffset / 4));
-                if(member->flags & SMwMemberInfo::eFlags::U1 || member->flags & SMwMemberInfo::eFlags::VIRTUAL_ADD) {
+                if(member->flags & SMwMemberInfo::eFlags::ADD || member->flags & SMwMemberInfo::eFlags::VIRTUAL_ADD) {
                     if(ImGui::Button("Add"))
                     {
                         nodwindow->m_ParentNod = nod;

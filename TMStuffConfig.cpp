@@ -26,7 +26,7 @@ void TMStuff::CTMStuffConfig::Init()
         0x48001000,
         offsetof(TMStuff::CTMStuffConfig, m_ImGuiStyle),
         "ImGuiStyle", "m_ImGuiStyle", "ImGuiStyle",
-        SMwMemberInfo::eFlags::READ | SMwMemberInfo::eFlags::WRITE,
+        SMwMemberInfo::eFlags::GET | SMwMemberInfo::eFlags::SET,
         &TMStuff::CTMStuffImGuiStyle::m_MwClassInfo_TMStuffImGuiStyle
     );
     m_MwClassInfo_TMStuffConfig.m_MemberInfos[0] = &TMStuffConfig_ImGuiStyle;
@@ -37,7 +37,7 @@ void TMStuff::CTMStuffConfig::Init()
         0x48001001,
         offsetof(TMStuff::CTMStuffConfig, m_ShowUi),
         "ShowUi", "m_ShowUi", "ShowUi",
-        SMwMemberInfo::eFlags::READ | SMwMemberInfo::eFlags::WRITE
+        SMwMemberInfo::eFlags::GET | SMwMemberInfo::eFlags::SET
     );
     m_MwClassInfo_TMStuffConfig.m_MemberInfos[1] = &TMStuffConfig_ShowUi;
 
@@ -47,7 +47,7 @@ void TMStuff::CTMStuffConfig::Init()
         0x48001002,
         offsetof(TMStuff::CTMStuffConfig, m_ShowTrackManiaNod),
         "ShowTrackManiaNod", "m_ShowTrackManiaNod", "ShowTrackManiaNod",
-        SMwMemberInfo::eFlags::READ | SMwMemberInfo::eFlags::WRITE
+        SMwMemberInfo::eFlags::GET | SMwMemberInfo::eFlags::SET
     );
     m_MwClassInfo_TMStuffConfig.m_MemberInfos[2] = &TMStuffConfig_ShowTM;
 
@@ -57,7 +57,7 @@ void TMStuff::CTMStuffConfig::Init()
         0x48001003,
         offsetof(TMStuff::CTMStuffConfig, m_ShowResave),
         "ShowResave", "m_ShowResave", "ShowResave",
-        SMwMemberInfo::eFlags::READ | SMwMemberInfo::eFlags::WRITE
+        SMwMemberInfo::eFlags::GET | SMwMemberInfo::eFlags::SET
     );
     m_MwClassInfo_TMStuffConfig.m_MemberInfos[3] = &TMStuffConfig_ShowResave;
 
@@ -67,7 +67,7 @@ void TMStuff::CTMStuffConfig::Init()
         0x48001004,
         offsetof(TMStuff::CTMStuffConfig, m_ShowPicker),
         "ShowPicker", "m_ShowPicker", "ShowPicker",
-        SMwMemberInfo::eFlags::READ | SMwMemberInfo::eFlags::WRITE
+        SMwMemberInfo::eFlags::GET | SMwMemberInfo::eFlags::SET
     );
     m_MwClassInfo_TMStuffConfig.m_MemberInfos[4] = &TMStuffConfig_ShowPicker;
 

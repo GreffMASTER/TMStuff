@@ -15,13 +15,13 @@ void TMStuff::CTMStuffImGuiStyle::Init()
     m_MwClassInfo_TMStuffImGuiStyle.m_MemberCount = 3;
     m_MwClassInfo_TMStuffImGuiStyle.m_MemberInfos = (SMwMemberInfo**)malloc(sizeof(SMwMemberInfo*) * m_MwClassInfo_TMStuffImGuiStyle.m_MemberCount);
 
-    GbxTools::SetMwMemberInfo(&CTMStuffImGuiStyle_Capture, 0x48002000, "Capture", "m_Capture", "Capture", SMwMemberInfo::eFlags::WRITE, (void*)TMStuff::CTMStuffImGuiStyle::Capture);
+    GbxTools::SetMwMemberInfo(&CTMStuffImGuiStyle_Capture, 0x48002000, "Capture", "m_Capture", "Capture", SMwMemberInfo::eFlags::SET, (void*)TMStuff::CTMStuffImGuiStyle::Capture);
     m_MwClassInfo_TMStuffImGuiStyle.m_MemberInfos[0] = &CTMStuffImGuiStyle_Capture;
 
-    GbxTools::SetMwMemberInfo(&CTMStuffImGuiStyle_Set, 0x48002001, "Set", "m_Set", "Set", SMwMemberInfo::eFlags::WRITE, (void*)TMStuff::CTMStuffImGuiStyle::Set);
+    GbxTools::SetMwMemberInfo(&CTMStuffImGuiStyle_Set, 0x48002001, "Set", "m_Set", "Set", SMwMemberInfo::eFlags::SET, (void*)TMStuff::CTMStuffImGuiStyle::Set);
     m_MwClassInfo_TMStuffImGuiStyle.m_MemberInfos[1] = &CTMStuffImGuiStyle_Set;
 
-    GbxTools::SetMwMemberInfo(&CTMStuffImGuiStyle_Edit, 0x48002002, "Edit", "m_Edit", "Edit", SMwMemberInfo::eFlags::WRITE, (void*)TMStuff::CTMStuffImGuiStyle::Edit);
+    GbxTools::SetMwMemberInfo(&CTMStuffImGuiStyle_Edit, 0x48002002, "Edit", "m_Edit", "Edit", SMwMemberInfo::eFlags::SET, (void*)TMStuff::CTMStuffImGuiStyle::Edit);
     m_MwClassInfo_TMStuffImGuiStyle.m_MemberInfos[2] = &CTMStuffImGuiStyle_Edit;
 
 
