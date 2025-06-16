@@ -23,6 +23,7 @@ class CFastString;
 class CMwClassInfo;
 
 class CClassicArchive;
+class CClassicLog;
 // nods
 class CMwNod;
 class CMwStack;
@@ -53,6 +54,7 @@ class CMwEngineMain;
 #include "FastArray.h"
 
 #include "ClassicArchive.h"
+#include "ClassicLog.h"
 
 #include "MwMemberInfo.h"
 #include "MwClassInfo.h"

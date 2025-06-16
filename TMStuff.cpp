@@ -135,9 +135,9 @@ static int ImGuiCFastStringResize(ImGuiInputTextCallbackData* data)
     if (data->EventFlag == ImGuiInputTextFlags_CallbackResize)
     {
         CFastString* my_str = (CFastString*)data->UserData;
-        my_str->m_Size = data->BufSize;
+        my_str->m_Size = data->BufTextLen + 1;
         realloc(my_str->m_Str, my_str->m_Size);
-        my_str->m_Str[my_str->m_Size] = '\0';
+        //my_str->m_Str[my_str->m_Size] = '\0';
         //IM_ASSERT(my_str->begin() == data->Buf);
         //my_str->resize(data->BufSize); // NB: On resizing calls, generally data->BufSize == data->BufTextLen + 1
         //data->Buf = my_str->begin();
@@ -602,6 +602,7 @@ void DoClassAuto(CMwNod* nod, CMwClassInfo* nod_class_info, TMStuff::MwNodWindow
                         nodwindow->m_ParentNod = nod;
                         nodwindow->m_TargetMember = (SMwClassMemberInfo*)member;
                         nodwindow->m_IsSetIdDialog = true;
+                        nodwindow->m_IdBuffer.clear();
                     }
                     break;
                 }
@@ -955,6 +956,7 @@ void DoCMwNod(CMwNod* nod, TMStuff::MwNodWindow* nodwindow)
         if(ImGui::Button("Set")) {
             nodwindow->m_ParentNod = nod;
             nodwindow->m_IsSetIdDialog = true;
+            nodwindow->m_IdBuffer.clear();
         }
     }
 }
@@ -1200,6 +1202,7 @@ void TMStuff::MwNodWindow::DoSetIdWindow()
             } else {
                 this->m_ParentNod->SetIdName((char*)this->m_IdBuffer.c_str());
             }
+
             this->m_TargetMember = nullptr;
             this->m_IsSetIdDialog = false;
             this->m_ParentNod = nullptr;

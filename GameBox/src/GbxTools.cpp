@@ -10,36 +10,6 @@ FILE* pLogFile = NULL;
 
 void** vtable_CMwNod = (void**)(0x0087ec60);
 
-bool GbxTools::InitLog(char* path)
-{
-    printf("InitLog for \"%s\"\n", path);
-    pLogFile = fopen(path, "w");
-    if(pLogFile) {
-        printf("Succ!\n");
-        return true;
-    }
-    return false;
-}
-
-bool GbxTools::DeInitLog()
-{
-    printf("DeInitLog\n");
-    if(pLogFile)
-        fclose(pLogFile);
-    return true;
-}
-
-size_t GbxTools::PushLog(char* text, int text_size)
-{
-    printf("[Log] %s", text);
-    return fwrite(text, 1, text_size-2, pLogFile);
-}
-
-size_t GbxTools::PushLog(std::string text)
-{
-    return fwrite(text.c_str(), text.size(), 1, pLogFile);
-}
-
 LPDIRECT3D9 GbxTools::GetD3D9()
 {
     LPDIRECT3D9* dx9 = (LPDIRECT3D9*)GAMED3D9;

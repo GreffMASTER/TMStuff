@@ -27,7 +27,7 @@ hPostQuitMessage PostQuitMessage_orig = 0;
 WNDPROC oWndProc;
 DWORD* dVtable;
 
-char* str_version = "TMStuff 1.2_a3\ngreffmaster 2024/2025\n";
+char* str_version = "TMStuff 1.2_a4\ngreffmaster 2024/2025\n";
 char* str_build = "Build: " __TIME__ ", " __DATE__ "\n";
 bool show_info = false;
 bool is_picking = false;
@@ -316,7 +316,6 @@ HRESULT APIENTRY Present_hook(LPDIRECT3DDEVICE9 pD3D9, CONST RECT* pSourceRect,C
         // Update
         if (logstr != logfststr->m_Str) {
             logstr = logfststr->m_Str;
-            GbxTools::PushLog(logfststr->m_Str, logfststr->m_Size);
         }
         // Draw
         if(TMStuff::m_Config->m_ShowUi && pD3D9 && window)
@@ -674,7 +673,6 @@ void APIENTRY PostQuitMessage_hook(int iExitCode)
 
         free(cwd);
         free(resave_list_path);
-        GbxTools::DeInitLog();
         printf("Clean up complete. See ya next time!");
         fclose(f);
     }
@@ -695,8 +693,8 @@ bool HoldTillGameInit()
 
 DWORD WINAPI MainThread(LPVOID param) {
     freopen_s(&f, "CONOUT$", "w", stdout);
-    GbxTools::InitLog("log.txt");
     HoldTillGameInit();
+    CClassicLog::Setup(CClassicLog::GetClassicLog(), "TrackManiaLog.txt", 1);
     cwd = (char*)malloc(256);
     GetCurrentDirectoryA(256, cwd);
     resave_list_path = (char*)malloc(256 * sizeof(char));

@@ -17,10 +17,6 @@ extern void** vtable_CMwNod;
 
 namespace GbxTools
 {
-    bool InitLog(char* path);
-    bool DeInitLog();
-    size_t PushLog(char* text, int text_size);
-    size_t PushLog(std::string text);
     LPDIRECT3D9 GetD3D9();
     LPDIRECT3DDEVICE9 GetD3DDevice9();
     CMwNodMain * GetMainNod();
