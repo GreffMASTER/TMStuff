@@ -82,6 +82,7 @@
 			<Add library="user32" />
 		</Linker>
 		<Unit filename="GameBox/include/ClassicArchive.h" />
+		<Unit filename="GameBox/include/ClassicLog.h" />
 		<Unit filename="GameBox/include/DumpTools.h" />
 		<Unit filename="GameBox/include/FastArray.h" />
 		<Unit filename="GameBox/include/FastBuffer.h" />
