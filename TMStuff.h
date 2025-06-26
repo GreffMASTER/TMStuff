@@ -1,6 +1,7 @@
 #ifndef TMSTUFF_H_INCLUDED
 #define TMSTUFF_H_INCLUDED
 
+#include <vector>
 #include "GameBox/include/GbxTools.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_internal.h"
@@ -12,6 +13,7 @@
 namespace TMStuff
 {
     class CTMStuffConfig;
+    class MwNodWindow;
 
     extern CTMStuffConfig* m_Config;
     extern bool m_Ready;
@@ -23,9 +25,12 @@ namespace TMStuff
     extern CMwClassInfo*** m_Classes;
     extern char** m_DriveNames;
 
+    extern std::vector<MwNodWindow*> windowman;
+
     void Init();
     void InitImGui();
     void Terminate();
+    void NewNodAddressWindow(CMwNod* nod);
 
     class MwNodWindow;
 
@@ -86,6 +91,18 @@ namespace TMStuff
         int m_AddressBuffer;
         int m_ClassIdBuffer;
         void** m_VTableBuffer;
+    };
+
+    class FidExplorerWindow
+    {
+    public:
+        FidExplorerWindow(CSystemFidsDrive* drive);
+        virtual ~FidExplorerWindow();
+        virtual bool Do(bool* p_open);
+
+        CSystemFidsDrive* m_Drive;
+        bool m_Open = true;
+        char* m_Title;
     };
 }
 

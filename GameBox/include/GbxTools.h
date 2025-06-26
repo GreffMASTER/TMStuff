@@ -30,6 +30,7 @@ namespace GbxTools
     void PrintNodInfo(CMwNod* nod);
     CMwId* GetMwId(CMwId* other, char* str);
     CFastString* GetStringById(CMwId* id);
+    CSystemFidsDrive* GetGameDataDrive();
 
     int LoadNod(CMwNod** nod, char* path);
     int LoadNod2(CMwNod** nod, char* path);

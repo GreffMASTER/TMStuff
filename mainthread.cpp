@@ -10,10 +10,13 @@
 #include <tchar.h>
 #include "minhook/include/MinHook.h"
 #include "TMStuff.h"
-#include <vector>
 #include <fstream>
 
+
 const unsigned long LOGSTRING		= 0x0097c0a4;  // CFastString *
+#define WINDRACER_MAP 0x0045d960
+void (__stdcall* WindRacerMap)(void) = (void (__stdcall* )(void))WINDRACER_MAP;
+
 
 HWND window = nullptr;
 
@@ -24,11 +27,16 @@ EndScene EndScene_orig = 0;
 Reset Reset_orig = 0;
 Present Present_orig = 0;
 hPostQuitMessage PostQuitMessage_orig = 0;
+LoadFile oLoadFile = 0;
+CreateEngines oCreateEngines = 0;
+
+
 WNDPROC oWndProc;
 DWORD* dVtable;
 
-char* str_version = "TMStuff 1.2_a4\ngreffmaster 2024/2025\n";
+char* str_version = "TMStuff 1.2_a5\ngreffmaster 2024/2025\n";
 char* str_build = "Build: " __TIME__ ", " __DATE__ "\n";
+bool windracer_mapped = false;
 bool show_info = false;
 bool is_picking = false;
 bool prev_is_mouse_down = false;
@@ -36,16 +44,18 @@ bool ask_dump_chunks = false;
 CMwNod* pick_corpus_buffer = nullptr;
 CMwNod* pick_tree_buffer = nullptr;
 
+std::vector<TMStuff::MwNodWindow*> TMStuff::windowman;
+
 int resave_succes = -1;
 bool resave_compress = true;
 bool resave_text = false;
 bool resave_release = true;
 bool resave_embed = false;
 
+bool show_fid_explorer = false;
 bool show_ids = false;
 bool debug = false;
-std::vector<TMStuff::MwNodWindow*> windowman;
-FILE* f; // console out
+extern FILE* f; // console out
 CFastString* logfststr = (CFastString*)LOGSTRING;
 char* logstr = nullptr;
 char* resave_list_path = nullptr;
@@ -55,6 +65,8 @@ int fillmode_wired = 1;
 int fillmode_solid = 0;
 CMwNod* pick_shader = nullptr;
 CMwNod* pick_shader_previous = nullptr;
+
+TMStuff::FidExplorerWindow* FidExplorer;
 
 LRESULT __stdcall WndProc(const HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     if(!TMStuff::m_ImGuiReady && capture_input)
@@ -159,9 +171,46 @@ LRESULT __stdcall WndProc(const HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
     return CallWindowProcA(oWndProc, hWnd, uMsg, wParam, lParam);
 }
 
+int hLoadFile(char* path, CMwNod** nod, unsigned long Cid, int EArchive, int flags)
+{
+    printf("Calling CSystemArchiveNod::LoadFile(\"%s\", 0x%08X)...\n", path, Cid);
+    if(!windracer_mapped)
+    {
+        WindRacerMap();
+        printf("WindRacer directories mapped!\n");
+        windracer_mapped = true;
+    }
+
+    //int res = GbxTools::LoadNod(nod, path);
+    int res = oLoadFile(path, nod, Cid, EArchive, flags);
+    printf("CSystemArchiveNod::LoadFile returned %i\n", res);
+    return res;
+}
+
+void CreateEngines_hook(CMwNod* nod, HINSTANCE inst)
+{
+    printf("CreateEngines called\n");
+    oCreateEngines(nod, inst);
+
+    CClassicLog::Setup(CClassicLog::GetClassicLog(), "TrackManiaLog.txt", 1);
+    TMStuff::Init();
+
+    return;
+}
+
+DWORD WINAPI InitHooksPre()
+{
+	if (MH_CreateHook((LPVOID)0x00401240, (LPVOID)&CreateEngines_hook, reinterpret_cast<void**>(&oCreateEngines)) != MH_OK) { return 1; }
+	if (MH_EnableHook((LPVOID)0x00401240) != MH_OK) { return 1; }
+
+	if (MH_CreateHook((LPVOID)0x0061bb40, (LPVOID)&hLoadFile, reinterpret_cast<void**>(&oLoadFile)) != MH_OK) { return 1; }
+	if (MH_EnableHook((LPVOID)0x0061bb40) != MH_OK) { return 1; }
+
+    return 0;
+}
+
 DWORD WINAPI InitHooks(HWND win)
 {
-
 	while (GetModuleHandle("d3d9.dll") == 0)
 	{
 		Sleep(100);
@@ -173,14 +222,14 @@ DWORD WINAPI InitHooks(HWND win)
 	HWND tmpWnd = CreateWindowA("BUTTON", "Temp Window", WS_SYSMENU | WS_MINIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, 300, 300, NULL, NULL, hModule, NULL);
 	if (tmpWnd == NULL)
 	{
-		return 0;
+		return 1;
 	}
 
 	d3d = Direct3DCreate9(D3D_SDK_VERSION);
 	if (d3d == NULL)
 	{
 		DestroyWindow(tmpWnd);
-		return 0;
+		return 1;
 	}
 
 	D3DPRESENT_PARAMETERS d3dpp;
@@ -195,7 +244,7 @@ DWORD WINAPI InitHooks(HWND win)
 	{
 		d3d->Release();
 		DestroyWindow(tmpWnd);
-		return 0;
+		return 1;
 	}
     // hooks
 	dVtable = (DWORD*)d3ddev;
@@ -207,22 +256,28 @@ DWORD WINAPI InitHooks(HWND win)
 	Present_orig = (Present)dVtable[17];
 	PostQuitMessage_orig = PostQuitMessage;
 
-	if (MH_Initialize() != MH_OK) { return 1; }
 	// PostQuitMessave
 	if (MH_CreateHook((DWORD_PTR*)PostQuitMessage, (LPVOID)&PostQuitMessage_hook, reinterpret_cast<void**>(&PostQuitMessage_orig)) != MH_OK) { return 1; }
 	if (MH_EnableHook((DWORD_PTR*)PostQuitMessage) != MH_OK) { return 1; }
+	printf("PostQuitMessage=OK\n");
     // Reset
 	if (MH_CreateHook((DWORD_PTR*)dVtable[16], (LPVOID)&Reset_hook, reinterpret_cast<void**>(&Reset_orig)) != MH_OK) { return 1; }
 	if (MH_EnableHook((DWORD_PTR*)dVtable[16]) != MH_OK) { return 1; }
+    printf("d3d->Reset=OK\n");
 	// Present
 	if (MH_CreateHook((DWORD_PTR*)dVtable[17], (LPVOID)&Present_hook, reinterpret_cast<void**>(&Present_orig)) != MH_OK) { return 1; }
 	if (MH_EnableHook((DWORD_PTR*)dVtable[17]) != MH_OK) { return 1; }
+	printf("d3d->Present=OK\n");
 	// EndScene
 	if (MH_CreateHook((DWORD_PTR*)dVtable[42], (LPVOID)&EndScene_hook, reinterpret_cast<void**>(&EndScene_orig)) != MH_OK) { return 1; }
 	if (MH_EnableHook((DWORD_PTR*)dVtable[42]) != MH_OK) { return 1; }
+	printf("d3d->EndScene=OK\n");
 	// DrawIndexedPrimitive
 	if (MH_CreateHook((DWORD_PTR*)dVtable[82], (LPVOID)&DrawIndexedPrimitive_hook, reinterpret_cast<void**>(&DrawIndexedPrimitive_orig)) != MH_OK) { return 1; }
 	if (MH_EnableHook((DWORD_PTR*)dVtable[82]) != MH_OK) { return 1; }
+    printf("d3d->DrawIndexedPrimitive=OK\n");
+
+	printf("MH_EnableHooks=OK\n");
 
 	oWndProc = (WNDPROC)SetWindowLongPtr(win, GWL_WNDPROC, (LONG_PTR)WndProc);
 
@@ -230,7 +285,7 @@ DWORD WINAPI InitHooks(HWND win)
 	d3d->Release();
 	DestroyWindow(tmpWnd);
 
-	return 1;
+	return 0;
 }
 
 DWORD WINAPI UninitHooks()
@@ -249,6 +304,12 @@ DWORD WINAPI UninitHooks()
 
     MH_DisableHook((DWORD_PTR*)dVtable[82]);
     MH_RemoveHook((DWORD_PTR*)dVtable[82]);
+    // LoadFile
+    MH_DisableHook((DWORD_PTR*)0x00401240);
+    MH_RemoveHook((DWORD_PTR*)0x00401240);
+    // CreateEngines
+    MH_DisableHook((DWORD_PTR*)0x0061bb40);
+    MH_RemoveHook((DWORD_PTR*)0x0061bb4);
 
     return MH_Uninitialize();
 }
@@ -316,6 +377,7 @@ HRESULT APIENTRY Present_hook(LPDIRECT3DDEVICE9 pD3D9, CONST RECT* pSourceRect,C
         // Update
         if (logstr != logfststr->m_Str) {
             logstr = logfststr->m_Str;
+            printf("[Game] %s", logstr);
         }
         // Draw
         if(TMStuff::m_Config->m_ShowUi && pD3D9 && window)
@@ -347,23 +409,27 @@ HRESULT APIENTRY Present_hook(LPDIRECT3DDEVICE9 pD3D9, CONST RECT* pSourceRect,C
                     TMStuff::m_Config->m_ShowTrackManiaNod = !TMStuff::m_Config->m_ShowTrackManiaNod;
                 }
 
+                ImGui::MenuItem("Fid Explorer", "", &show_fid_explorer);
+
                 if(ImGui::MenuItem("New Window", "", nullptr)) {
                     TMStuff::MwNodWindowAddress* new_window = new TMStuff::MwNodWindowAddress();
-                    windowman.push_back(new_window);
+                    TMStuff::windowman.push_back(new_window);
                 }
 
                 if(ImGui::MenuItem("Close All", "", nullptr)) {
-                    for(int i=0;i<windowman.size();i++) {
-                        TMStuff::MwNodWindow* next_window = windowman[i];
+                    for(int i=0;i<TMStuff::windowman.size();i++) {
+                        TMStuff::MwNodWindow* next_window = TMStuff::windowman[i];
                         if(next_window) {
                             delete next_window;
                         }
                     }
-                    windowman.clear();
+                    TMStuff::windowman.clear();
                 }
                 ImGui::EndMenu();
             }
 
+            if(show_fid_explorer)
+                FidExplorer->Do(&show_fid_explorer);
             //ImGui::ShowDemoWindow();
 
             if(ImGui::MenuItem("Picker", "", TMStuff::m_Config->m_ShowPicker)) {
@@ -469,12 +535,12 @@ HRESULT APIENTRY Present_hook(LPDIRECT3DDEVICE9 pD3D9, CONST RECT* pSourceRect,C
 
 
                 // Do nod windows
-                for(int i=0;i<windowman.size();i++)
+                for(int i=0;i<TMStuff::windowman.size();i++)
                 {
-                    TMStuff::MwNodWindow* next_window = windowman[i];
+                    TMStuff::MwNodWindow* next_window = TMStuff::windowman[i];
                     if(next_window)
                         if(!next_window->Do(&next_window->m_Open)) {
-                            windowman.erase(std::next(windowman.begin(), i));
+                            TMStuff::windowman.erase(std::next(TMStuff::windowman.begin(), i));
                             delete next_window;
                         }
                 }
@@ -653,13 +719,14 @@ void APIENTRY PostQuitMessage_hook(int iExitCode)
         printf("PostQuitMessage detected, shutting down...\n");
         printf("Freeing windows...\n");
         delete nod_window1;
-        for(int i=0;i<windowman.size();i++) {
-            TMStuff::MwNodWindow* next_window = windowman[i];
+        delete FidExplorer;
+        for(int i=0;i<TMStuff::windowman.size();i++) {
+            TMStuff::MwNodWindow* next_window = TMStuff::windowman[i];
             if(next_window) {
                 delete next_window;
             }
         }
-        windowman.clear();
+        TMStuff::windowman.clear();
 
         if(pick_shader)
             GbxTools::MwDestroy(pick_shader);
@@ -674,14 +741,13 @@ void APIENTRY PostQuitMessage_hook(int iExitCode)
         free(cwd);
         free(resave_list_path);
         printf("Clean up complete. See ya next time!");
-        fclose(f);
+
     }
     return PostQuitMessage_orig(iExitCode);
 }
 
 bool HoldTillGameInit()
 {
-    printf("Waiting for the game to finish starting...\n");
     while(true)
     {
         LPDIRECT3D9 d3d = GbxTools::GetD3D9();
@@ -692,26 +758,43 @@ bool HoldTillGameInit()
 }
 
 DWORD WINAPI MainThread(LPVOID param) {
-    freopen_s(&f, "CONOUT$", "w", stdout);
+    printf("Waiting for the game to create engines...\n");
+    while(true)
+    {
+        if(TMStuff::m_Ready)
+        {
+            printf("TMStuff ready\n");
+            break;
+        }
+
+    }
+
+    printf("Waiting for the game to finish starting...\n");
     HoldTillGameInit();
-    CClassicLog::Setup(CClassicLog::GetClassicLog(), "TrackManiaLog.txt", 1);
+    printf("DONE\n");
+
     cwd = (char*)malloc(256);
     GetCurrentDirectoryA(256, cwd);
     resave_list_path = (char*)malloc(256 * sizeof(char));
     memset(resave_list_path, 0, 256);
+
     printf("%s\n", cwd);
     printf("Game started!\n");
     printf(str_version);
     printf(str_build);
 
+
     CMwNodMain* main = GbxTools::GetMainNod();
     HWND hwnd = main->m_HWNDWindow;
 
+    printf("InitHooks...\n");
     InitHooks(hwnd);
+    printf("DONE\n");
 
-    TMStuff::Init();
+    WindRacerMap();
 
     nod_window1 = new TMStuff::MwNodWindow(GbxTools::GetTrackManiaNod());
+    FidExplorer = new TMStuff::FidExplorerWindow(GbxTools::GetGameDataDrive());
 
     pick_shader = GbxTools::CreateByMwClassId(0x09026000);
     if(pick_shader)

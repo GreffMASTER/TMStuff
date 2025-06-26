@@ -9,6 +9,7 @@ char*** TMStuff::m_ClassNames = nullptr;
 int* TMStuff::m_NumClasses = nullptr;
 CMwClassInfo*** TMStuff::m_Classes = nullptr;
 char** TMStuff::m_DriveNames = nullptr;
+//std::vector<TMStuff::MwNodWindow*> TMStuff::windowman;
 
 void TMStuff::Init()
 {
@@ -82,7 +83,7 @@ void TMStuff::Init()
 	}
 	TMStuff::m_DriveNames = (char**)malloc(sizeof(char*) * 2);
 	TMStuff::m_DriveNames[0] = "GameData/";
-	TMStuff::m_DriveNames[1] = "PC:/";
+	TMStuff::m_DriveNames[1] = "<null>";
 
     TMStuff::m_Ready = true;
 }
@@ -130,6 +131,13 @@ void TMStuff::Terminate()
 	printf("TMStuff Terminated\n");
 }
 
+void TMStuff::NewNodAddressWindow(CMwNod* nod)
+{
+    TMStuff::MwNodWindowAddress* new_window = new TMStuff::MwNodWindowAddress();
+    new_window->SetNod(nod);
+    TMStuff::windowman.push_back(new_window);
+}
+
 static int ImGuiCFastStringResize(ImGuiInputTextCallbackData* data)
 {
     if (data->EventFlag == ImGuiInputTextFlags_CallbackResize)
@@ -159,12 +167,8 @@ void TMStuff::CopyToClipboard(char* str, int str_size)
 void TMStuff::DoNodCopyButton(CMwNod* nod, SMwClassMemberInfo* memberinfo, MwNodWindow* nodwindow, CMwNod* parent_nod)
 {
     ImGui::PushID(nod);
-    if(ImGui::Button("Copy")) {
-        char* hex = (char*)malloc(32);
-        sprintf_s(hex, 32, "%09X", nod);
-        CopyToClipboard(hex, 32);
-        printf("Address copied to clipboard: \"%s\"\n", hex);
-        free(hex);
+    if(ImGui::Button("Nod")) {
+        TMStuff::NewNodAddressWindow(nod);
     }
 
     if(nod) {
@@ -188,12 +192,8 @@ void TMStuff::DoNodCopyButton(CMwNod** nod, SMwClassMemberInfo* memberinfo, MwNo
     ImGui::PushID(*nod);
     CMwNod* my_nod = *nod;
     if(my_nod) {
-        if(ImGui::Button("Copy")) {
-            char* hex = (char*)malloc(32);
-            sprintf_s(hex, 32, "%09X", my_nod);
-            CopyToClipboard(hex, 32);
-            printf("Address copied to clipboard: \"%s\"\n", hex);
-            free(hex);
+        if(ImGui::Button("Nod")) {
+            TMStuff::NewNodAddressWindow(*nod);
         }
         ImGui::SameLine();
         if(ImGui::Button("Del"))
@@ -222,12 +222,8 @@ void TMStuff::DoNodCopyButton(CMwNod** nod, SMwClassMemberInfo* memberinfo, MwNo
 void TMStuff::DoNodCopyButton(CMwNod* nod, bool killable)
 {
     ImGui::PushID(nod);
-    if(ImGui::Button("Copy")) {
-        char* hex = (char*)malloc(32);
-        sprintf_s(hex, 32, "%09X", nod);
-        CopyToClipboard(hex, 32);
-        printf("Address copied to clipboard: \"%s\"\n", hex);
-        free(hex);
+    if(ImGui::Button("Nod")) {
+        TMStuff::NewNodAddressWindow(nod);
     }
 
     if(nod && killable) {
@@ -306,6 +302,8 @@ char* GetFlagStr(int flags, SMwMemberInfo::eFlags mask)
     return "_";
 }
 
+////////////////////////////////////////////////////////////////////////
+
 void DoClassAuto(CMwNod* nod, CMwClassInfo* nod_class_info, TMStuff::MwNodWindow* nodwindow)
 {
     int* nod_valk = (int*)nod;
@@ -321,6 +319,7 @@ void DoClassAuto(CMwNod* nod, CMwClassInfo* nod_class_info, TMStuff::MwNodWindow
             case 0x09047006: //
             case 0x09047007: //
             case 0x09047008: // w h a t
+            case 0x0a10200c: // SandYach stuff
                 continue;
             // type overrides
             case 0x0a031000: // CSceneToyVehicleMaterial.MaterialId
@@ -346,14 +345,17 @@ void DoClassAuto(CMwNod* nod, CMwClassInfo* nod_class_info, TMStuff::MwNodWindow
         // doin
         /////////////////
 
-        // printf("%08X\n", member->memberId); // debug
+        //printf("%08X\n", member->memberId); // debug
+        //printf("Type: %i\n", member_type);
 
         if(member->fieldOffset == -1 && member->type != 0) // virtual memebers
         {
+            //printf("Virtual member\n");
             ImGui::PushID((int)member+(int)nod);
             // prepare the stacc
-            CMwStack* stacc = CMwStack::NewCMwStack();
-            CMwStack::Allocate(stacc, 1);
+            CMwStack* stacc = (CMwStack*)malloc(sizeof(CMwStack));
+            stacc->m_Size = 1;
+            stacc->ppMemberInfos = (SMwMemberInfo**)malloc(sizeof(SMwMemberInfo*) * stacc->m_Size);
             stacc->ppMemberInfos[0] = member;
             stacc->iCurrentPos = 0;
 
@@ -594,16 +596,21 @@ void DoClassAuto(CMwNod* nod, CMwClassInfo* nod_class_info, TMStuff::MwNodWindow
                 }
                 case SMwMemberInfo::ID:
                 {
+                    //printf("ID\n");
                     CFastString* str = nullptr;
                     nod->VirtualParam_Get(stacc, (void**)&str);
+                    //printf("VirtualParam_Get OK\n");
                     ImGui::Text("%s = \"%s\"", member->pszName, str->m_Str);
                     ImGui::SameLine();
+                    ImGui::PushID(str);
                     if(ImGui::Button("Set")) {
                         nodwindow->m_ParentNod = nod;
                         nodwindow->m_TargetMember = (SMwClassMemberInfo*)member;
                         nodwindow->m_IsSetIdDialog = true;
                         nodwindow->m_IdBuffer.clear();
                     }
+                    ImGui::PopID();
+                    //printf("EO ID\n");
                     break;
                 }
                 case SMwMemberInfo::VEC2:
@@ -643,13 +650,17 @@ void DoClassAuto(CMwNod* nod, CMwClassInfo* nod_class_info, TMStuff::MwNodWindow
                     break;
                 }
             }
-            stacc->Delete(1);
+
+            free(stacc->ppMemberInfos);
+            free(stacc);
             ImGui::PopID();
+            //printf("EO %08X\n", member->memberId); // debug
             continue;
         }
         //////////////////////////
         // Non-virtual
         //////////////////////////
+        //printf("Non-virtual member\n");
         ImGui::PushID((int)member+(int)nod);
         switch(member_type)
         {
@@ -676,7 +687,7 @@ void DoClassAuto(CMwNod* nod, CMwClassInfo* nod_class_info, TMStuff::MwNodWindow
             {
                 SMwClassArrayMemberInfo* classmember = (SMwClassArrayMemberInfo*)member;
                 CFastArray<CMwNod*>* buf = (CFastArray<CMwNod*>*)(nod_valk + (member->fieldOffset / 4));
-                if(member->flags & SMwMemberInfo::eFlags::ADD || member->flags & SMwMemberInfo::eFlags::VIRTUAL_ADD) {
+                //if(member->flags & SMwMemberInfo::eFlags::ADD || member->flags & SMwMemberInfo::eFlags::VIRTUAL_ADD) {
                     if(ImGui::Button("Add"))
                     {
                         nodwindow->m_ParentNod = nod;
@@ -684,7 +695,7 @@ void DoClassAuto(CMwNod* nod, CMwClassInfo* nod_class_info, TMStuff::MwNodWindow
                         nodwindow->m_IsAddDialog = true;
                         nodwindow->m_TargetMemberIndex = buf->numElems - 1;
                     }
-                }
+                //}
                 ImGui::SameLine();
                 if(member->flags & SMwMemberInfo::eFlags::VIRTUAL_SUB) {
                     if(ImGui::Button("Sub") && buf->numElems > 0)
@@ -920,44 +931,37 @@ void DoClassAuto(CMwNod* nod, CMwClassInfo* nod_class_info, TMStuff::MwNodWindow
         }
         ImGui::PopID();
     }
+    //printf("EO DoClassAuto\n");
 }
 
-// Custom
 
-void DoCMwNod(CMwNod* nod, TMStuff::MwNodWindow* nodwindow)
+/////////////////////////////////
+// Custom
+/////////////////////////////////
+
+
+void DoCMwNod(CMwNod* nod, TMStuff::MwNodWindow* nodwindow, CMwClassInfo* curclassinfo)
 {
+    DoClassAuto(nod, curclassinfo, nodwindow);
+
     ImGui::InputInt("ReferenceCount", (int*)&nod->m_ReferenceCount, 1, 1, 0);
-    ImGui::Text("SystemFid<CSystemFid> @ %08X", nod->m_SystemFid);
-    ImGui::SameLine();
-    TMStuff::DoNodCopyButton(nod->m_SystemFid, true);
+    DoMemberClass(nod->m_SystemFid, "Fid", "CSystemFid", nodwindow);
 
     SFastBuffer<CMwNod*>* buf = nod->m_Dependants;
     if(buf) {
-        ImGui::Text("Dependants (%i)", buf->numElems);
-        for(int j=0;j<buf->numElems;j++) {
-            CMwNod* new_nod = buf->pElems[j];
-            ImGui::PushID(j);
-            ImGui::Text("\t%i: %s @ %08X", j, new_nod->MwGetClassInfo()->m_ClassName, new_nod);
-            ImGui::SameLine();
-            TMStuff::DoNodCopyButton(new_nod, true);
-            ImGui::PopID();
+        if(ImGui::TreeNode(buf, "%s<%s> (%i)", "Dependants", "CMwNod", buf->numElems)) {
+            for(int j=0;j<buf->numElems;j++) {
+                CMwNod* new_nod = buf->pElems[j];
+                ImGui::PushID(j);
+                ImGui::Text("\t%i: %s @ %08X", j, new_nod->MwGetClassInfo()->m_ClassName, new_nod);
+                ImGui::SameLine();
+                TMStuff::DoNodCopyButton(new_nod, true);
+                ImGui::PopID();
+            }
+            ImGui::TreePop();
         }
-    } else
+    } else {
         ImGui::Text("Dependants (NULL)");
-
-    CMwId* id = nod->MwGetId();
-    if(id) {
-        CFastString* str = GbxTools::GetStringById(id);
-        if(str)
-            ImGui::Text("IdName = \"%s\"", str->m_Str);
-        else
-            ImGui::Text("IdName = \"Unassigned\"");
-        ImGui::SameLine();
-        if(ImGui::Button("Set")) {
-            nodwindow->m_ParentNod = nod;
-            nodwindow->m_IsSetIdDialog = true;
-            nodwindow->m_IdBuffer.clear();
-        }
     }
 }
 
@@ -1073,6 +1077,27 @@ void DoCTrackManiaControlPlayerInput(CMwNod* nod, TMStuff::MwNodWindow* nodwindo
     ImGui::PopID();
 }
 
+void DoCSceneToyVehicleTrackMania(CMwNod* nod, TMStuff::MwNodWindow* nodwindow)
+{
+    DoClassAuto(nod, nod->MwGetClassInfo(), nodwindow);
+    // additional data not in member infos
+    ImGui::PushID((int)nod+69424); // nice
+    int* horn_count =  (int*)((int)nod + 0x204);
+    ImGui::InputInt("HornCount", horn_count, 1, 1, 0);
+    ImGui::PopID();
+}
+
+void DoCHmsZone(CMwNod* nod, TMStuff::MwNodWindow* nodwindow)
+{
+    DoClassAuto(nod, nod->MwGetClassInfo(), nodwindow);
+    // additional data not in member infos
+    ImGui::PushID((int)nod+69426);
+
+    DoMemberClass(*(CMwNod**)((int)nod + 0x14), "Sector", "CSceneSector", nodwindow);
+
+    ImGui::PopID();
+}
+
 void DoClass(CMwNod* nod, CMwClassInfo* nod_class_info, TMStuff::MwNodWindow* nodwindow)
 {
     ImGui::PushID(nod);
@@ -1085,7 +1110,7 @@ void DoClass(CMwNod* nod, CMwClassInfo* nod_class_info, TMStuff::MwNodWindow* no
         switch(nod_class_info->m_ClassId)
         {
             case 0x01001000: {
-                DoCMwNod(nod, nodwindow);
+                DoCMwNod(nod, nodwindow, nod_class_info);
                 break;
             }
             case 0x0501a000: {
@@ -1094,6 +1119,14 @@ void DoClass(CMwNod* nod, CMwClassInfo* nod_class_info, TMStuff::MwNodWindow* no
             }
             case 0x06003000: {
                 DoCHmsItem(nod, nodwindow);
+                break;
+            }
+            case 0x06004000: {
+                DoCHmsZone(nod, nodwindow);
+                break;
+            }
+            case 0x0a103000: {
+                DoCSceneToyVehicleTrackMania(nod, nodwindow);
                 break;
             }
             case 0x24032000: {
@@ -1119,7 +1152,7 @@ void DoClass(CMwNod* nod, CMwClassInfo* nod_class_info, TMStuff::MwNodWindow* no
 
 void DoNod(CMwNod* nod, TMStuff::MwNodWindow* nodwindow)
 {
-    CMwClassInfo* nod_info = nod->MwGetClassInfo(); // this causes issues when quitting
+    CMwClassInfo* nod_info = nod->MwGetClassInfo();
     DoClass(nod, nod_info, nodwindow);
 }
 
@@ -1128,7 +1161,7 @@ void DoNod(CMwNod* nod, TMStuff::MwNodWindowAddress* nodwindow)
     if(ImGui::Button("Save As")) {
         nodwindow->m_IsSaveDialog = true;
     }
-    CMwClassInfo* nod_info = nod->MwGetClassInfo(); // this causes issues when quitting
+    CMwClassInfo* nod_info = nod->MwGetClassInfo();
     DoClass(nod, nod_info, nodwindow);
 }
 
@@ -1190,14 +1223,20 @@ void TMStuff::MwNodWindow::DoSetIdWindow()
         ImGui::Begin("Set MwId?", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
         ImGui::InputText("IdName", &this->m_IdBuffer);
         if(ImGui::Button("Yes##SetId")) {
-            //printf("len is: %i\n", sizeof(this->m_PathBuffer));
             if(this->m_TargetMember) {
-                CFastString* new_str = (CFastString*)malloc(sizeof(CFastString));
+                if(this->m_TargetMember->memberId == 0x01001000)
+                {
+                    this->m_ParentNod->SetIdName((char*)this->m_IdBuffer.c_str());
+                } else {
+                    CFastString* new_str = (CFastString*)malloc(sizeof(CFastString));
 
-                new_str->m_Str = (char*)malloc(this->m_IdBuffer.length());
-                memcpy(new_str->m_Str, this->m_IdBuffer.c_str(), this->m_IdBuffer.length());
-                new_str->m_Size = this->m_IdBuffer.length();
-                GbxTools::VirtualParam_Set_Fast(this->m_ParentNod, this->m_TargetMember, (void**)new_str);
+                    new_str->m_Str = (char*)malloc(this->m_IdBuffer.length());
+                    memcpy(new_str->m_Str, this->m_IdBuffer.c_str(), this->m_IdBuffer.length());
+                    new_str->m_Size = this->m_IdBuffer.length();
+
+                    GbxTools::VirtualParam_Set_Fast(this->m_ParentNod, this->m_TargetMember, (void**)m_IdBuffer.c_str());
+                }
+
                 //free(new_str);
             } else {
                 this->m_ParentNod->SetIdName((char*)this->m_IdBuffer.c_str());
@@ -1263,15 +1302,26 @@ bool TMStuff::MwNodWindow::DoSetWindow()
                         GbxTools::VirtualParam_Add_SuperFast(this->m_ParentNod, (void**)target, 1, this->m_TargetMember);
 
                     } else {
-                        printf("Add to CFastArray\n");
-                        int nod_offset = this->m_TargetMember->fieldOffset;
-                        CFastArray<CMwNod*>* arr = (CFastArray<CMwNod*>*)((int)this->m_ParentNod + nod_offset);
+                        if(this->m_TargetMember->type == SMwMemberInfo::CLASSARRAY) {
+                            printf("Add to CFastArray\n");
+                            int nod_offset = this->m_TargetMember->fieldOffset;
+                            CFastArray<CMwNod*>* arr = (CFastArray<CMwNod*>*)((int)this->m_ParentNod + nod_offset);
 
-                        //CFastArray<CMwNod*>* arr = (CFastArray<CMwNod*>*)(nod_valk + (m_offset / 4));
-                        Natural new_size = arr->numElems + 1;
-                        printf("old size: %i\nnew size: %i\n",arr->numElems, new_size);
-                        CFastArray_ReAllocate(arr, new_size);
-                        arr->pElems[new_size-1] = target;
+                            //CFastArray<CMwNod*>* arr = (CFastArray<CMwNod*>*)(nod_valk + (m_offset / 4));
+                            Natural new_size = arr->numElems + 1;
+                            printf("old size: %i\nnew size: %i\n",arr->numElems, new_size);
+                            CFastArray_ReAllocate(arr, new_size);
+                            arr->pElems[new_size-1] = target;
+                        } else if(this->m_TargetMember->type == SMwMemberInfo::CLASSBUFFER) {
+                            //int nod_offset = this->m_TargetMember->fieldOffset;
+                            //SFastBuffer<CMwNod*>* buff = (SFastBuffer<CMwNod*>*)((int)this->m_ParentNod + nod_offset);
+
+                            //Natural new_size = buff->numElems + 1;
+                            //if(buff->numElems >= buff->cap)
+                            //    buff->cap = buff->cap + 1;
+
+
+                        }
                     }
                 }
             }
@@ -1298,12 +1348,12 @@ bool TMStuff::MwNodWindow::Do(bool* p_open)
     if(!this->m_Nod)
         return false;
     ImGui::PushID(this);
-    ImGui::Begin(this->m_Title, p_open);
-    DoNod(this->m_Nod, this);
-    ImGui::End();
-    DoSetWindow();
-    DoSetIdWindow();
-    ImGui::PopID();
+        ImGui::Begin(this->m_Title, p_open);
+        DoNod(this->m_Nod, this);
+        ImGui::End();
+        DoSetWindow();
+        DoSetIdWindow();
+        ImGui::PopID();
     return *p_open;
 }
 
@@ -1319,6 +1369,7 @@ bool TMStuff::MwNodWindowAddress::SetNod(CMwNod* nod)
     if(!GbxTools::MwCheckThis(nod, sizeof(nod)))
         return false;
     this->m_Nod = nod;
+    this->m_AddressBuffer = (int)nod;
     this->m_Lookup = true;
     return true;
 }
@@ -1473,6 +1524,94 @@ bool TMStuff::MwNodWindowAddress::Do(bool* p_open)
     DoSetWindow();
     DoSetIdWindow();
     // end
+    ImGui::End();
+    ImGui::PopID();
+    return true;
+}
+
+TMStuff::FidExplorerWindow::FidExplorerWindow(CSystemFidsDrive* drive)
+{
+    this->m_Drive = drive;
+    this->m_Title = "Fid Explorer - GameData";
+}
+
+TMStuff::FidExplorerWindow::~FidExplorerWindow()
+{}
+
+bool DoSystemFids(CSystemFids* fids)
+{
+    for(int i=0;i<fids->m_Trees.numElems;i++)
+    {
+        CSystemFids* next_fids = fids->m_Trees.pElems[i];
+        if(next_fids)
+        {
+            if(next_fids->MwIsKindOf(0x0b00b000))
+            {
+                if(ImGui::TreeNode(next_fids, "%s", CSystemFidsFolder::GetFolderName((CSystemFidsFolder*)next_fids)->m_Str))
+                {
+                    DoSystemFids(next_fids);
+                    ImGui::TreePop();
+                }
+            }
+
+        }
+    }
+
+    for(int i=0;i<fids->m_Leaves.numElems;i++)
+    {
+        char* prefix = "|-";
+        if(i==fids->m_Leaves.numElems-1)
+            prefix = "|_";
+        CSystemFid* next_fid = fids->m_Leaves.pElems[i];
+        if(next_fid)
+        {
+            ImGui::PushID(next_fid);
+            if(next_fid->MwIsKindOf(0x0b00a000))
+            {
+                CSystemFidFile* next_fid_file = (CSystemFidFile*)next_fid;
+                if(next_fid_file->m_Nod)
+                {
+
+                    if(ImGui::Button("Nod"))
+                    {
+                        TMStuff::NewNodAddressWindow(next_fid_file->m_Nod);
+                    }
+                    ImGui::SameLine();
+                }
+                else
+                {
+                    if(ImGui::Button("Preload"))
+                    {}
+                    ImGui::SameLine();
+                }
+
+                ImGui::Text("%s %s", prefix, next_fid_file->m_FileName.m_Str);
+            }
+            else
+            {
+                ImGui::Text("%s %i", prefix, i);
+            }
+            ImGui::PopID();
+        }
+    }
+    return true;
+}
+
+bool TMStuff::FidExplorerWindow::Do(bool* p_open)
+{
+    // delete window
+    if(!this->m_Open)
+        return false;
+    ImGui::PushID(this);
+    ImGui::SetNextWindowSize(ImVec2(512, 512), ImGuiCond_FirstUseEver);
+    ImGui::Begin(this->m_Title, p_open);
+
+    if(ImGui::TreeNode(this->m_Drive, "GameData"))
+    {
+        DoSystemFids(this->m_Drive);
+        ImGui::TreePop();
+    }
+
     ImGui::End();
     ImGui::PopID();
     return true;

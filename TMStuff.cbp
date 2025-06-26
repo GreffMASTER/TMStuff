@@ -112,6 +112,10 @@
 		<Unit filename="GameBox/include/MwRefBuffer.h" />
 		<Unit filename="GameBox/include/MwStack.h" />
 		<Unit filename="GameBox/include/SystemFid.h" />
+		<Unit filename="GameBox/include/SystemFidFile.h" />
+		<Unit filename="GameBox/include/SystemFids.h" />
+		<Unit filename="GameBox/include/SystemFidsDrive.h" />
+		<Unit filename="GameBox/include/SystemFidsFolder.h" />
 		<Unit filename="GameBox/include/VisionViewport.h" />
 		<Unit filename="GameBox/include/VisionViewportDx9.h" />
 		<Unit filename="GameBox/src/DumpTools.cpp" />

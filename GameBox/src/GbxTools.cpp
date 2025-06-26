@@ -130,18 +130,27 @@ SMwMemberInfo * GbxTools::GetMemberInfoById(CMwNod* nod, int member_id)
     return nullptr;
 }
 
+CSystemFidsDrive* GbxTools::GetGameDataDrive()
+{
+    CSystemFidsDrive* (__fastcall* get_drive)(CMwEngine* in_engine) = (CSystemFidsDrive* (__fastcall* )(CMwEngine* in_engine))0x00616e30;
+    CMwEngineMain* e = GbxTools::GetEngineMain();
+    CMwEngine* s = e->m_Engines.pElems[0xb];
+    return get_drive(s);
+
+}
+
 int GbxTools::LoadNod(CMwNod** nod, char* path)
 {
     // define functions
-    CSystemFid* (__fastcall* get_drive)(CMwEngine* in_engine) = (CSystemFid* (__fastcall* )(CMwEngine* in_engine))0x00616e30;
-    int (__cdecl* load)( char* path, CMwNod** nod, CSystemFid* drive, int earchive, int u1) =
-    (int (__cdecl* )( char* path, CMwNod** nod, CSystemFid* drive, int earchive, int u1))0x00459460;
+
+    int (__cdecl* load)( char* path, CMwNod** nod, CSystemFidsDrive* drive, int earchive, int u1) =
+        (int (__cdecl* )( char* path, CMwNod** nod, CSystemFidsDrive* drive, int earchive, int u1))0x00459460;
 
     // rest
     int res = 0;
-    CMwEngineMain* e = GbxTools::GetEngineMain();
-    CMwEngine* s = e->m_Engines.pElems[0xb];
-    CSystemFid* drive = get_drive(s);
+
+
+    CSystemFidsDrive* drive = GbxTools::GetGameDataDrive();
 
     printf("Loading nod from \"%s\"...\n", path);
     load(path, nod, drive, 7, 1);
@@ -153,19 +162,14 @@ int GbxTools::LoadNod(CMwNod** nod, char* path)
 
 int GbxTools::LoadNod2(CMwNod** nod, char* path)
 {
-    // define functions
-    CSystemFid* (__fastcall* get_drive)(CMwEngine* in_engine) = (CSystemFid* (__fastcall* )(CMwEngine* in_engine))0x00616e30;
     int (__cdecl* load)( char* path, CMwNod** nod, CSystemFid* drive, int earchive, int u1) =
     (int (__cdecl* )( char* path, CMwNod** nod, CSystemFid* drive, int earchive, int u1))0x00459460;
 
     // rest
     int res = 0;
-    CMwEngineMain* e = GbxTools::GetEngineMain();
-    CMwEngine* s = e->m_Engines.pElems[0xb];
-    CSystemFid* drive = get_drive(s);
 
     printf("Loading nod from \"%s\"...\n", path);
-    load(path, nod, nullptr, 7, 1);
+    load(path, nod, NULL, 7, 1);
     if(*nod)
         res = 1;
     printf("Result: %i\n", res);
@@ -197,20 +201,16 @@ int GbxTools::SaveNod(CMwNod* nod, char* path, int flags)
 int GbxTools::SaveNod2(CMwNod* nod, char* path, int flags)
 {
     // define functions
-    CSystemFid* (__fastcall* get_drive)(CMwEngine* in_engine) = (CSystemFid* (__fastcall* )(CMwEngine* in_engine))0x00616e30;
     void (__thiscall* create_archive)(CMwNod*) = (void (__thiscall* )(CMwNod*))0x00618280;
     int (__thiscall* save)( CMwNod*,char* path, CMwNod* nod, CSystemFid* drive, int flags, int earchive, int u1, int u2) =
     (int (__thiscall* )(CMwNod*, char* path, CMwNod* nod, CSystemFid* drive, int flags, int earchive, int u1, int u2))0x0061ab40;
 
     // rest
     int res = 0;
-    CMwEngineMain* e = GbxTools::GetEngineMain();
-    CMwEngine* s = e->m_Engines.pElems[0xb];
-    CSystemFid* drive = get_drive(s);
     CMwNod* archive = (CMwNod*)malloc(0x200);
     create_archive(archive);
     printf("Saving nod to \"%s\"...\n", path);
-    res = save(archive, path, nod, nullptr, flags, 7, 1, 1);
+    res = save(archive, path, nod, NULL, flags, 7, 1, 1);
     printf("Result: %i\n", res);
     delete archive;
     return res; // 1 = success

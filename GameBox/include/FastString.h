@@ -16,4 +16,14 @@ class CFastString
         }
 };
 
+class CFastStringInt
+{
+    public:
+        virtual Delete(byte flags);
+        Natural m_Size;
+        wchar_t* m_Str;
+
+
+};
+
 #endif // __FASTSTRING_H__

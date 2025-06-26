@@ -78,6 +78,12 @@ class CMwEngineMain;
 #include "MwEngine.h"
 #include "MwEngineMain.h"
 
+#include "SystemFid.h"
+#include "SystemFidFile.h"
+#include "SystemFids.h"
+#include "SystemFidsFolder.h"
+#include "SystemFidsDrive.h"
+
 
 typedef struct SVec2 {
     union {

@@ -3,12 +3,14 @@
 
 #include "MwNod.h"
 
+class CSystemFids;
+
 class CSystemFid : public CMwNod
 {
     public:
         Natural u2;
         Natural flags;
-        void* m_FolderFid;
+        CSystemFids* m_ParentFids;
         Natural u3;
         Natural u4;
         Natural m_ClassId;
