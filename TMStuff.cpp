@@ -348,7 +348,34 @@ void DoClassAuto(CMwNod* nod, CMwClassInfo* nod_class_info, TMStuff::MwNodWindow
         //printf("%08X\n", member->memberId); // debug
         //printf("Type: %i\n", member_type);
 
-        if(member->fieldOffset == -1 && member->type != 0) // virtual memebers
+        if(member->type == SMwMemberInfo::ACTION)
+        {
+            ImGui::PushID((int)member+(int)nod);
+            SMwActionInfo* action_member = (SMwActionInfo*)member;
+            if(action_member->pFun != nullptr) {
+                if(ImGui::Button(member->pszName))
+                    action_member->pFun(nod);
+            } else {
+                ImGui::Text("(V)");
+                ImGui::SameLine();
+                if(ImGui::Button(member->pszName)) {
+                    CMwStack* stacc = (CMwStack*)malloc(sizeof(CMwStack));
+                    stacc->m_Size = 1;
+                    stacc->ppMemberInfos = (SMwMemberInfo**)malloc(sizeof(SMwMemberInfo*) * stacc->m_Size);
+                    stacc->ppMemberInfos[0] = member;
+                    stacc->iCurrentPos = 0;
+
+                    nod->VirtualParam_Set(stacc, nullptr);
+
+                    free(stacc->ppMemberInfos);
+                    free(stacc);
+                }
+            }
+            ImGui::PopID();
+            continue;
+        }
+
+        if(member->fieldOffset == -1) // virtual memebers
         {
             //printf("Virtual member\n");
             ImGui::PushID((int)member+(int)nod);
@@ -664,13 +691,6 @@ void DoClassAuto(CMwNod* nod, CMwClassInfo* nod_class_info, TMStuff::MwNodWindow
         ImGui::PushID((int)member+(int)nod);
         switch(member_type)
         {
-            case SMwMemberInfo::ACTION:
-            {
-                SMwActionInfo* action_member = (SMwActionInfo*)member;
-                if(ImGui::Button(member->pszName) && action_member->pFun != nullptr)
-                    action_member->pFun(nod);
-                break;
-            }
             case SMwMemberInfo::BOOL:
             {
                 Bool* b = (Bool*)(nod_valk + (member->fieldOffset / 4));
@@ -946,7 +966,13 @@ void DoCMwNod(CMwNod* nod, TMStuff::MwNodWindow* nodwindow, CMwClassInfo* curcla
 
     ImGui::InputInt("ReferenceCount", (int*)&nod->m_ReferenceCount, 1, 1, 0);
     DoMemberClass(nod->m_SystemFid, "Fid", "CSystemFid", nodwindow);
-
+    if(nod->m_SystemFid) {
+        ImGui::SameLine();
+        if(ImGui::Button("Delete")) {
+            nod->m_SystemFid->Delete(1);
+            nod->m_SystemFid = NULL;
+        }
+    }
     SFastBuffer<CMwNod*>* buf = nod->m_Dependants;
     if(buf) {
         if(ImGui::TreeNode(buf, "%s<%s> (%i)", "Dependants", "CMwNod", buf->numElems)) {
@@ -1113,6 +1139,14 @@ void DoClass(CMwNod* nod, CMwClassInfo* nod_class_info, TMStuff::MwNodWindow* no
                 DoCMwNod(nod, nodwindow, nod_class_info);
                 break;
             }
+            case 0x03060000: { //CWindRacer
+                DoClassAuto(nod, nod_class_info, nodwindow);
+                ImGui::PushID((int)nod+69425);
+                int* stuff = (int*)((int)nod + 0x1b8);
+                ImGui::InputInt("Multiplayer", stuff, 1, 1, 0);
+                ImGui::PopID();
+                break;
+            }
             case 0x0501a000: {
                 DoCFuncKeysReal(nod, nodwindow);
                 break;
@@ -1121,10 +1155,10 @@ void DoClass(CMwNod* nod, CMwClassInfo* nod_class_info, TMStuff::MwNodWindow* no
                 DoCHmsItem(nod, nodwindow);
                 break;
             }
-            case 0x06004000: {
-                DoCHmsZone(nod, nodwindow);
-                break;
-            }
+            //case 0x06004000: {
+            //    DoCHmsZone(nod, nodwindow);
+            //    break;
+            //}
             case 0x0a103000: {
                 DoCSceneToyVehicleTrackMania(nod, nodwindow);
                 break;

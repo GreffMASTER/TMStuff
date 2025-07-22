@@ -42,7 +42,7 @@ namespace TMStuff
                 return index - 1 | 0x48002000;
             };
             static char __stdcall vGetChunkCount(void) {
-                return 5;
+                return 6;
             };
 
             static void __fastcall Capture(CTMStuffImGuiStyle* nod);

@@ -134,7 +134,9 @@ void __thiscall TMStuff::CTMStuffImGuiStyle::vChunk(TMStuff::CTMStuffImGuiStyle*
             DoReal(pA, &nod->m_Style.LogSliderDeadzone, 1);
             DoReal(pA, &nod->m_Style.TabRounding, 1);
             DoReal(pA, &nod->m_Style.TabBorderSize, 1);
-            DoReal(pA, &nod->m_Style.TabMinWidthForCloseButton, 1);
+            //DoReal(pA, &nod->m_Style.TabMinWidthForCloseButton, 1);
+            float dummy = 0.0;
+            DoReal(pA, &dummy, 1);
             DoReal(pA, &nod->m_Style.TabBarBorderSize, 1);
             DoReal(pA, &nod->m_Style.TabBarOverlineSize, 1);
             DoReal(pA, &nod->m_Style.TableAngledHeadersAngle, 1);
@@ -181,6 +183,12 @@ void __thiscall TMStuff::CTMStuffImGuiStyle::vChunk(TMStuff::CTMStuffImGuiStyle*
             DoNatural(pA, (Natural*)&nod->m_Style.HoverFlagsForTooltipNav, 1, 0);
             return;
         }
+        case 0x48002004: {
+            DoReal(pA, &nod->m_Style.FontSizeBase, 1);
+            DoReal(pA, &nod->m_Style.FontScaleMain, 1);
+            DoReal(pA, &nod->m_Style.FontScaleDpi, 1);
+            return;
+        }
     }
 
     CMwNod_Chunk(nod, pA, chunkId);
@@ -195,6 +203,7 @@ int __stdcall TMStuff::CTMStuffImGuiStyle::vGetChunkInfo(int chunkId) {
         case 0x48002001:
         case 0x48002002:
         case 0x48002003:
+        case 0x48002004:
             return 3;
     }
 

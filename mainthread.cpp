@@ -34,7 +34,7 @@ CreateEngines oCreateEngines = 0;
 WNDPROC oWndProc;
 DWORD* dVtable;
 
-char* str_version = "TMStuff 1.2_a5\ngreffmaster 2024/2025\n";
+char* str_version = "TMStuff 1.2_a6\ngreffmaster 2024/2025\n";
 char* str_build = "Build: " __TIME__ ", " __DATE__ "\n";
 bool windracer_mapped = false;
 bool show_info = false;
@@ -79,7 +79,7 @@ LRESULT __stdcall WndProc(const HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         bool isRepeat = (lParam & 0xFF000000);
         if(!isRepeat) { // ONLY ONCE
             switch(wParam) {
-                case VK_F1: {
+                /*case VK_F1: {
                     printf("Testing stack\n");
                     CMwNod* test = GbxTools::GetTrackManiaNod();
                     CMwStack* stacc = CMwStack::NewCMwStack();
@@ -128,7 +128,7 @@ LRESULT __stdcall WndProc(const HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                     stacc->Delete(1);
                     str->Delete(1);
                     break;
-                }
+                }*/
                 case VK_F3: {
                     TMStuff::m_Config->m_ShowUi = !TMStuff::m_Config->m_ShowUi;
                     break;
@@ -141,10 +141,8 @@ LRESULT __stdcall WndProc(const HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                 }
             }
         }
-
     }
-
-   /* if(uMsg >= WM_KEYFIRST && uMsg <= WM_KEYLAST) {
+   if(uMsg >= WM_KEYFIRST && uMsg <= WM_KEYLAST) {
         // Test Key Input
         // To prevent typing while using ImGui interface
         if(ImWndProcResult) {
@@ -160,13 +158,15 @@ LRESULT __stdcall WndProc(const HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             return ImWndProcResult;
         }
         if(ImIo.WantCaptureMouse || !capture_input) {
+            // TODO
+            // Make the game ALWAYS capture mouse movement, to prevent the game from HIDING THE FUCKING CURSOR!
             return 0;
         }
     } else {
         if(ImWndProcResult) {
             return ImWndProcResult;
         }
-    }*/
+    }
 
     return CallWindowProcA(oWndProc, hWnd, uMsg, wParam, lParam);
 }
@@ -192,7 +192,7 @@ void CreateEngines_hook(CMwNod* nod, HINSTANCE inst)
     printf("CreateEngines called\n");
     oCreateEngines(nod, inst);
 
-    CClassicLog::Setup(CClassicLog::GetClassicLog(), "TrackManiaLog.txt", 1);
+    CClassicLog::Setup(CClassicLog::GetClassicLog(), "LOG.txt", 1);
     TMStuff::Init();
 
     return;
