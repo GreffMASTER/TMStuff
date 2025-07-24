@@ -142,7 +142,9 @@ LRESULT __stdcall WndProc(const HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             }
         }
     }
-   if(uMsg >= WM_KEYFIRST && uMsg <= WM_KEYLAST) {
+    if(!TMStuff::m_Config->m_ShowUi)
+        return CallWindowProcA(oWndProc, hWnd, uMsg, wParam, lParam);
+    if(uMsg >= WM_KEYFIRST && uMsg <= WM_KEYLAST) {
         // Test Key Input
         // To prevent typing while using ImGui interface
         if(ImWndProcResult) {
@@ -428,8 +430,6 @@ HRESULT APIENTRY Present_hook(LPDIRECT3DDEVICE9 pD3D9, CONST RECT* pSourceRect,C
                 ImGui::EndMenu();
             }
 
-            if(show_fid_explorer)
-                FidExplorer->Do(&show_fid_explorer);
             //ImGui::ShowDemoWindow();
 
             if(ImGui::MenuItem("Picker", "", TMStuff::m_Config->m_ShowPicker)) {
@@ -446,6 +446,9 @@ HRESULT APIENTRY Present_hook(LPDIRECT3DDEVICE9 pD3D9, CONST RECT* pSourceRect,C
 
                 if(debug)
                     ImGui::ShowDebugLogWindow(&debug);
+
+                if(show_fid_explorer)
+                    FidExplorer->Do(&show_fid_explorer);
 
                 if(TMStuff::m_Config->m_ShowTrackManiaNod) // Main TM nod
                     nod_window1->Do((bool*)&TMStuff::m_Config->m_ShowTrackManiaNod);

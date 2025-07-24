@@ -36,6 +36,8 @@ namespace GbxTools
     int LoadNod2(CMwNod** nod, char* path);
     int SaveNod(CMwNod* nod, char* path, int flags);
     int SaveNod2(CMwNod* nod, char* path, int flags);
+    int ReSaveNod(CMwNod* nod);
+    int LoadFromFid(CMwNod** ppNod, CSystemFid* pFid, int eArchive);
 
     int MwDestroy(CMwNod* nod);
     CMwNod* CreateByMwClassId(int id);

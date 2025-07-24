@@ -1448,6 +1448,14 @@ bool TMStuff::MwNodWindowAddress::Do(bool* p_open)
     if(ImGui::Button("Load From")) {
         this->m_IsLoadDialog = true;
     }
+    if(this->m_Lookup && this->m_Nod) {
+        if(this->m_Nod->m_SystemFid) {
+            ImGui::SameLine();
+            if(ImGui::Button("ReSave")) {
+                GbxTools::ReSaveNod(this->m_Nod);
+            }
+        }
+    }
     // DRAW NOD
     if(this->m_Lookup && this->m_Nod);
     {
@@ -1615,7 +1623,10 @@ bool DoSystemFids(CSystemFids* fids)
                 else
                 {
                     if(ImGui::Button("Preload"))
-                    {}
+                    {
+                        CMwNod* dummy = NULL;
+                        GbxTools::LoadFromFid(&dummy, next_fid_file, 7);
+                    }
                     ImGui::SameLine();
                 }
 

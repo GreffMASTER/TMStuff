@@ -216,6 +216,30 @@ int GbxTools::SaveNod2(CMwNod* nod, char* path, int flags)
     return res; // 1 = success
 }
 
+int GbxTools::ReSaveNod(CMwNod* nod)
+{
+    // define functions
+    void (__thiscall* create_archive)(CMwNod*) = (void (__thiscall* )(CMwNod*))0x00618280;
+    int (__thiscall* resave)(CMwNod*,CMwNod*) = (int (__thiscall* )(CMwNod*,CMwNod*))0x00619ef0;
+
+    // rest
+    int res = 0;
+    CMwNod* archive = (CMwNod*)malloc(0x200);
+    create_archive(archive);
+    printf("ReSaving nod...\n");
+    res = resave(archive, nod);
+    printf("Result: %i\n", res);
+    delete archive;
+    return res; // 1 = success
+}
+
+int GbxTools::LoadFromFid(CMwNod** ppNod, CSystemFid* pFid, int eArchive)
+{
+    int (__cdecl* load_from_fid)(CMwNod**, CSystemFid*, int) = (int (__cdecl* )(CMwNod**, CSystemFid*, int))0x00421820;
+    printf("Calling LoadFromFid...\n");
+    return load_from_fid(ppNod, pFid, eArchive);
+}
+
 int GbxTools::MwDestroy(CMwNod* nod)
 {
     int (__fastcall* destroy)(CMwNod* in_nod) = (int (__fastcall* )(CMwNod* in_nod))0x004d6680;

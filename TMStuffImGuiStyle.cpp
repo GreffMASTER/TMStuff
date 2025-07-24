@@ -134,9 +134,10 @@ void __thiscall TMStuff::CTMStuffImGuiStyle::vChunk(TMStuff::CTMStuffImGuiStyle*
             DoReal(pA, &nod->m_Style.LogSliderDeadzone, 1);
             DoReal(pA, &nod->m_Style.TabRounding, 1);
             DoReal(pA, &nod->m_Style.TabBorderSize, 1);
-            //DoReal(pA, &nod->m_Style.TabMinWidthForCloseButton, 1);
+            //DoReal(pA, &nod->m_Style.TabMinWidthForCloseButton, 1); // deprecated since 1.92.1
             float dummy = 0.0;
             DoReal(pA, &dummy, 1);
+            // *
             DoReal(pA, &nod->m_Style.TabBarBorderSize, 1);
             DoReal(pA, &nod->m_Style.TabBarOverlineSize, 1);
             DoReal(pA, &nod->m_Style.TableAngledHeadersAngle, 1);
