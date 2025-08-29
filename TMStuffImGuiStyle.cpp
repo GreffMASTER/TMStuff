@@ -167,12 +167,23 @@ void __thiscall TMStuff::CTMStuffImGuiStyle::vChunk(TMStuff::CTMStuffImGuiStyle*
         }
         case 0x48002002: {
             int cnt = ImGuiCol_COUNT;
+            int cnt_overflow = 0;
             DoInteger(pA, &cnt, 1, 0);
+            if(cnt > ImGuiCol_COUNT) // backwards compatibility
+                cnt_overflow = cnt - ImGuiCol_COUNT;
+                cnt = ImGuiCol_COUNT;
             for(int i=0;i<cnt;i++) {
                 DoReal(pA, &nod->m_Style.Colors[i].x, 1);
                 DoReal(pA, &nod->m_Style.Colors[i].y, 1);
                 DoReal(pA, &nod->m_Style.Colors[i].z, 1);
                 DoReal(pA, &nod->m_Style.Colors[i].w, 1);
+            }
+            for(int i=0;i<cnt_overflow;i++) {
+                float dummy = 0;
+                DoReal(pA, &dummy, 1);
+                DoReal(pA, &dummy, 1);
+                DoReal(pA, &dummy, 1);
+                DoReal(pA, &dummy, 1);
             }
             return;
         }

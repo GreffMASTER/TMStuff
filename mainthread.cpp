@@ -142,6 +142,7 @@ LRESULT __stdcall WndProc(const HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             }
         }
     }
+    /*
     if(!TMStuff::m_Config->m_ShowUi)
         return CallWindowProcA(oWndProc, hWnd, uMsg, wParam, lParam);
     if(uMsg >= WM_KEYFIRST && uMsg <= WM_KEYLAST) {
@@ -168,7 +169,7 @@ LRESULT __stdcall WndProc(const HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         if(ImWndProcResult) {
             return ImWndProcResult;
         }
-    }
+    }*/
 
     return CallWindowProcA(oWndProc, hWnd, uMsg, wParam, lParam);
 }
@@ -407,7 +408,7 @@ HRESULT APIENTRY Present_hook(LPDIRECT3DDEVICE9 pD3D9, CONST RECT* pSourceRect,C
             }
 
             if(ImGui::BeginMenu("Windows")) {
-                if(ImGui::MenuItem("TrackMania Nod", "", TMStuff::m_Config->m_ShowTrackManiaNod)) {
+                if(ImGui::MenuItem("Game Nod", "", TMStuff::m_Config->m_ShowTrackManiaNod)) {
                     TMStuff::m_Config->m_ShowTrackManiaNod = !TMStuff::m_Config->m_ShowTrackManiaNod;
                 }
 
