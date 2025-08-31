@@ -9,6 +9,7 @@ SMwMemberInfo TMStuffConfig_ShowTM;
 SMwMemberInfo TMStuffConfig_ShowResave;
 SMwMemberInfo TMStuffConfig_ShowPicker;
 SMwMemberInfo TMStuffConfig_ShowConfig;
+SMwMemberInfo TMStuffConfig_ShowScreenShot;
 
 void TMStuff::CTMStuffConfig::Init()
 {
@@ -18,7 +19,7 @@ void TMStuff::CTMStuffConfig::Init()
     printf("Creating ClassInfo for TMStuff...\n");
     GbxTools::CreateMwClassInfo(&m_MwClassInfo_TMStuffConfig, 0x48001000, MwClassInfo_CMwNod, "CTMStuffConfig", (void*)MwNewCTMStuffConfig);
 
-    m_MwClassInfo_TMStuffConfig.m_MemberCount = 5;
+    m_MwClassInfo_TMStuffConfig.m_MemberCount = 6;
     m_MwClassInfo_TMStuffConfig.m_MemberInfos = (SMwMemberInfo**)malloc(sizeof(SMwMemberInfo*) * m_MwClassInfo_TMStuffConfig.m_MemberCount);
 
     GbxTools::SetMwMemberInfo(
@@ -71,6 +72,16 @@ void TMStuff::CTMStuffConfig::Init()
     );
     m_MwClassInfo_TMStuffConfig.m_MemberInfos[4] = &TMStuffConfig_ShowPicker;
 
+    GbxTools::SetMwMemberInfo(
+        &TMStuffConfig_ShowScreenShot,
+        SMwMemberInfo::BOOL,
+        0x48001005,
+        offsetof(TMStuff::CTMStuffConfig, m_ShowScreenShot),
+        "ShowScreenShot", "m_ShowScreenShot", "ShowScreenShot",
+        SMwMemberInfo::eFlags::GET | SMwMemberInfo::eFlags::SET
+    );
+    m_MwClassInfo_TMStuffConfig.m_MemberInfos[5] = &TMStuffConfig_ShowScreenShot;
+
 
     // prepare the engine
 
@@ -113,6 +124,7 @@ TMStuff::CTMStuffConfig* TMStuff::CTMStuffConfig::MwNewCTMStuffConfig()
         nod->m_ShowUi = 1;
         nod->m_ShowTrackManiaNod = 0;
         nod->m_ShowPicker = 0;
+        nod->m_ShowScreenShot = 0;
         nod->m_ImGuiStyle = TMStuff::CTMStuffImGuiStyle::MwNewCTMStuffImGuiStyle();
         return nod;
     }
@@ -155,6 +167,10 @@ void __thiscall TMStuff::CTMStuffConfig::vChunk(TMStuff::CTMStuffConfig* nod, CC
             DoBool(pA, &nod->m_ShowPicker, 1);
             return;
         }
+        case 0x48001002: {
+            DoBool(pA, &nod->m_ShowScreenShot, 1);
+            return;
+        }
     }
 
     CMwNod_Chunk(nod, pA, chunkId);
@@ -168,6 +184,7 @@ int __stdcall TMStuff::CTMStuffConfig::vGetChunkInfo(int chunkId)
     switch(chunkId) {
         case 0x48001000:
         case 0x48001001:
+        case 0x48001002:
             return 3;
     }
     int res = CMwNod_GetChunkInfo(chunkId);

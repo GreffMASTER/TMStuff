@@ -1,6 +1,7 @@
 #ifndef MWSTACK_H_INCLUDED
 #define MWSTACK_H_INCLUDED
 
+#include "FastString.h"
 #include "MwNod.h"
 #include "MwMemberInfo.h"
 
@@ -35,6 +36,19 @@ class CMwStack : public CMwNod {
             if(res == 0)
                 stacc->iCurrentPos = stacc->m_Size - 1;
             return res;
+        }
+
+        static CMwStack* NewCMwStackFastString(char* str, CMwNod* nod)
+        {
+            CMwStack* stacc = NewCMwStack();
+            CFastString* stacc_str = CFastString::NewCFastString(str);
+            int res = Push(stacc, 0xFFFFFFFF, nod, stacc_str);
+            stacc_str->Delete(1);
+            if(res == 0)
+                return stacc;
+
+            CMwNod::MwRelease(stacc);
+            return nullptr;
         }
 };
 

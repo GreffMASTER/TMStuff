@@ -41,6 +41,11 @@ bool show_info = false;
 bool is_picking = false;
 bool prev_is_mouse_down = false;
 bool ask_dump_chunks = false;
+bool doing_screenie = false;
+bool update_res = false;
+bool use_custom_screenie_resolution = false;
+int screenie_counter = 0;
+std::string screenie_name_buffer = "ScreenShot";
 CMwNod* pick_corpus_buffer = nullptr;
 CMwNod* pick_tree_buffer = nullptr;
 
@@ -66,6 +71,17 @@ int fillmode_solid = 0;
 CMwNod* pick_shader = nullptr;
 CMwNod* pick_shader_previous = nullptr;
 
+static int ImGuiCFastStringResize_ScreenShotName(ImGuiInputTextCallbackData* data)
+{
+    if (data->EventFlag == ImGuiInputTextFlags_CallbackResize)
+    {
+        CFastString* my_str = (CFastString*)data->UserData;
+        my_str->m_Size = data->BufTextLen + 1;
+        realloc(my_str->m_Str, my_str->m_Size);
+    }
+    return 0;
+}
+
 TMStuff::FidExplorerWindow* FidExplorer;
 
 LRESULT __stdcall WndProc(const HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
@@ -74,6 +90,12 @@ LRESULT __stdcall WndProc(const HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 	ImGuiIO& ImIo = ImGui::GetIO();
     LRESULT ImWndProcResult = ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam);
+
+    if(uMsg == WM_DROPFILES) {
+        HDROP hDrop = (HDROP)wParam;
+        //DragFinish(hDrop);
+        printf("Dropped files!");
+    }
 
     if(uMsg == WM_KEYDOWN) {
         bool isRepeat = (lParam & 0xFF000000);
@@ -170,6 +192,12 @@ LRESULT __stdcall WndProc(const HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             return ImWndProcResult;
         }
     }*/
+
+    if(doing_screenie) {
+        printf("Screenie Done!\n");
+        doing_screenie = false;
+        update_res = true; // *sigh* actual update res must be done in Present()...
+    }
 
     return CallWindowProcA(oWndProc, hWnd, uMsg, wParam, lParam);
 }
@@ -382,10 +410,36 @@ HRESULT APIENTRY Present_hook(LPDIRECT3DDEVICE9 pD3D9, CONST RECT* pSourceRect,C
             logstr = logfststr->m_Str;
             printf("[Game] %s", logstr);
         }
-        // Draw
-        if(TMStuff::m_Config->m_ShowUi && pD3D9 && window)
-        {
+        if(update_res) {
+            update_res = false;
+            CMwNod* game = GbxTools::GetTrackManiaNod();
 
+            // Reset ScreenShotForceRes
+            CMwStack* stacc_f = CMwStack::NewCMwStackFastString("Viewport.ScreenShotForceRes", game);
+            if(stacc_f) {
+                Bool* ScreenShotForceRes;
+                int res_get_f = CMwNod::Param_Get(game, stacc_f, (void **)&ScreenShotForceRes);
+                if(res_get_f == 0) {
+                    *ScreenShotForceRes = 0;
+                }
+            }
+            // Update filename for next screenshot
+            CMwStack* stacc_n = CMwStack::NewCMwStackFastString("Viewport.ScreenShotFileName", game);
+            if(stacc_n) {
+                CFastString* ScreenShotFileName;
+                int res_get_n = CMwNod::Param_Get(game, stacc_n, (void **)&ScreenShotFileName);
+                if(res_get_n == 0) {
+                    std::string NewScreenShotName = screenie_name_buffer + std::to_string(screenie_counter);
+
+                    ScreenShotFileName->m_Size = NewScreenShotName.length() + 1;
+                    realloc(ScreenShotFileName->m_Str, ScreenShotFileName->m_Size);
+                    memcpy_s(ScreenShotFileName->m_Str, ScreenShotFileName->m_Size, NewScreenShotName.c_str(), ScreenShotFileName->m_Size);
+                }
+            }
+        }
+        // Draw
+        if(TMStuff::m_Config->m_ShowUi && !doing_screenie && pD3D9 && window)
+        {
             ImGui_ImplDX9_NewFrame();
             ImGui_ImplWin32_NewFrame();
             ImGui::NewFrame();
@@ -403,8 +457,21 @@ HRESULT APIENTRY Present_hook(LPDIRECT3DDEVICE9 pD3D9, CONST RECT* pSourceRect,C
                 ImGui::EndMenu();
             }
 
-            if(ImGui::MenuItem("Resave", "", TMStuff::m_Config->m_ShowResave)) {
-                TMStuff::m_Config->m_ShowResave = !TMStuff::m_Config->m_ShowResave;
+
+            if(ImGui::BeginMenu("Tools")) {
+                if(ImGui::MenuItem("Resave", "", TMStuff::m_Config->m_ShowResave)) {
+                    TMStuff::m_Config->m_ShowResave = !TMStuff::m_Config->m_ShowResave;
+                }
+
+                if(ImGui::MenuItem("Picker", "", TMStuff::m_Config->m_ShowPicker)) {
+                    TMStuff::m_Config->m_ShowPicker = !TMStuff::m_Config->m_ShowPicker;
+                }
+
+                if(ImGui::MenuItem("ScreenShot", "", TMStuff::m_Config->m_ShowScreenShot)) {
+                    TMStuff::m_Config->m_ShowScreenShot = !TMStuff::m_Config->m_ShowScreenShot;
+                }
+
+                ImGui::EndMenu();
             }
 
             if(ImGui::BeginMenu("Windows")) {
@@ -429,12 +496,6 @@ HRESULT APIENTRY Present_hook(LPDIRECT3DDEVICE9 pD3D9, CONST RECT* pSourceRect,C
                     TMStuff::windowman.clear();
                 }
                 ImGui::EndMenu();
-            }
-
-            //ImGui::ShowDemoWindow();
-
-            if(ImGui::MenuItem("Picker", "", TMStuff::m_Config->m_ShowPicker)) {
-                TMStuff::m_Config->m_ShowPicker = !TMStuff::m_Config->m_ShowPicker;
             }
 
             ImGui::MenuItem("Capture Input", "", &capture_input);
@@ -505,6 +566,95 @@ HRESULT APIENTRY Present_hook(LPDIRECT3DDEVICE9 pD3D9, CONST RECT* pSourceRect,C
                             else
                                 ImGui::Text("Failed to resave one or few nods. Check log.");
                         }
+                    ImGui::End();
+                }
+
+                if(TMStuff::m_Config->m_ShowScreenShot) {
+                    CMwNod* game = GbxTools::GetTrackManiaNod();
+                    ImGui::Begin("ScreenShot", (bool*)&TMStuff::m_Config->m_ShowScreenShot, ImGuiWindowFlags_AlwaysAutoResize);
+                    CMwStack* stacc_n = CMwStack::NewCMwStackFastString("Viewport.ScreenShotFileName", game);
+                    if(stacc_n) {
+                        CFastString* ScreenShotFileName;
+                        int res_get_n = CMwNod::Param_Get(game, stacc_n, (void **)&ScreenShotFileName);
+                        if(res_get_n == 0) {
+                            if(ImGui::InputText("ScreenShotFileName", ScreenShotFileName->m_Str, ScreenShotFileName->m_Size, ImGuiInputTextFlags_CallbackResize, ImGuiCFastStringResize_ScreenShotName, (void*)ScreenShotFileName))
+                            {
+                                screenie_counter = 0;
+                                screenie_name_buffer = ScreenShotFileName->m_Str;
+                            }
+                        }
+                    }
+
+                    ImGui::Checkbox("Use custom resolution", &use_custom_screenie_resolution);
+                    if(use_custom_screenie_resolution) {
+                        // Width
+                        CMwStack* stacc_w = CMwStack::NewCMwStackFastString("Viewport.ScreenShotWidth", game);
+                        if(stacc_w) {
+                            Natural* ScreenShotWidth = 0;
+                            int res_get_w = CMwNod::Param_Get(game, stacc_w, (void **)&ScreenShotWidth);
+                            if(res_get_w == 0)
+                                ImGui::InputInt("ScreenShotWidth", (int*)ScreenShotWidth, 1, 1, 0);
+                            CMwNod::MwRelease(stacc_w);
+                        }
+                        // Height
+                        CMwStack* stacc_h = CMwStack::NewCMwStackFastString("Viewport.ScreenShotHeight", game);
+                        if(stacc_h) {
+                            Natural* ScreenShotHeight = 0;
+                            int res_get_h = CMwNod::Param_Get(game, stacc_h, (void **)&ScreenShotHeight);
+                            if(res_get_h == 0)
+                                ImGui::InputInt("ScreenShotHeight", (int*)ScreenShotHeight, 1, 1, 0);
+                            CMwNod::MwRelease(stacc_h);
+                        }
+                        ImGui::Text("(Note: custom render resolution only works in windowed mode.)");
+                    }
+                    // Capture
+                    if(ImGui::Button("Capture (BMP)")) {
+                        CMwStack* stacc_f = CMwStack::NewCMwStackFastString("Viewport.ScreenShotForceRes", game);
+                        Bool* ScreenShotForceRes;
+
+                        CMwStack* stacc_bmp = CMwStack::NewCMwStackFastString("Viewport.ScreenShotDoCaptureBMP", game);
+                        if(stacc_bmp) {
+                            if(use_custom_screenie_resolution) {
+                                // Use custom resolution
+                                CMwStack* stacc_f = CMwStack::NewCMwStackFastString("Viewport.ScreenShotForceRes", game);
+                                if(stacc_f) {
+                                    Bool* ScreenShotForceRes;
+                                    int res_get_f = CMwNod::Param_Get(game, stacc_f, (void **)&ScreenShotForceRes);
+                                    if(res_get_f == 0)
+                                        *ScreenShotForceRes = 1;
+                                    CMwNod::MwRelease(stacc_f);
+                                }
+                            }
+                            // Capture BMP
+                            CMwNod::Param_Set(game, stacc_bmp, nullptr);
+                            CMwNod::MwRelease(stacc_bmp);
+                            doing_screenie = true;
+                            screenie_counter++;
+                        }
+                    }
+
+                    if(ImGui::Button("Capture (DDS)")) {
+                        CMwStack* stacc_dds = CMwStack::NewCMwStackFastString("Viewport.ScreenShotDoCaptureDDS", game);
+                        if(stacc_dds) {
+                            if(use_custom_screenie_resolution) {
+                                // Use custom resolution
+                                CMwStack* stacc_f = CMwStack::NewCMwStackFastString("Viewport.ScreenShotForceRes", game);
+                                if(stacc_f) {
+                                    Bool* ScreenShotForceRes;
+                                    int res_get_f = CMwNod::Param_Get(game, stacc_f, (void **)&ScreenShotForceRes);
+                                    if(res_get_f == 0)
+                                        *ScreenShotForceRes = 1;
+                                    CMwNod::MwRelease(stacc_f);
+                                }
+                            }
+                            // Capture DDS
+                            CMwNod::Param_Set(game, stacc_dds, nullptr);
+                            CMwNod::MwRelease(stacc_dds);
+                            doing_screenie = true;
+                            screenie_counter++;
+                        }
+                    }
+                    CMwNod::MwRelease(stacc_n);
                     ImGui::End();
                 }
 
@@ -794,6 +944,7 @@ DWORD WINAPI MainThread(LPVOID param) {
     printf("InitHooks...\n");
     InitHooks(hwnd);
     printf("DONE\n");
+    DragAcceptFiles(hwnd, TRUE);
 
     WindRacerMap();
 

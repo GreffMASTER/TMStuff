@@ -45,6 +45,12 @@ class CMwNod
         SFastBuffer<CMwNod*>* m_Dependants;
         Natural u1;
 
+        static int MwRelease(CMwNod* nod)
+        {
+            int (__thiscall* callable)(CMwNod*) = (int (__thiscall*)(CMwNod*))0x004d6680;
+            return callable(nod);
+        }
+
         static int Param_Get(CMwNod* nod, CMwStack* stacc, void** value)
         {
             int (__thiscall* callable)(CMwNod*, CMwStack*, void**) = (int (__thiscall*)(CMwNod*, CMwStack*, void**))0x004d6cb0;

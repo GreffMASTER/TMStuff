@@ -32,7 +32,7 @@ namespace TMStuff
                 return index - 1 | 0x48001000;
             };
             static char __stdcall vGetParamCount(void) {
-                return 6; // param count + 1
+                return 7; // param count + 1
             };
             static void __thiscall vChunk(TMStuff::CTMStuffConfig* nod, CClassicArchive* pA, int chunkId);
             static int __stdcall vGetChunkInfo(int chunkId);
@@ -43,7 +43,7 @@ namespace TMStuff
                 return index - 1 | 0x48001000;
             };
             static char __stdcall vGetChunkCount(void) {
-                return 3; // chunk count + 1
+                return 4; // chunk count + 1
             };
             static void __thiscall vOnNodLoaded(TMStuff::CTMStuffConfig* nod);
 
@@ -54,6 +54,7 @@ namespace TMStuff
             Bool m_ShowResave;
             Bool m_ShowPicker;
             Bool m_ShowConfig;
+            Bool m_ShowScreenShot;
     };
 }
 

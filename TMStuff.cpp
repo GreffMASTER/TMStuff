@@ -145,6 +145,7 @@ static int ImGuiCFastStringResize(ImGuiInputTextCallbackData* data)
         CFastString* my_str = (CFastString*)data->UserData;
         my_str->m_Size = data->BufTextLen + 1;
         realloc(my_str->m_Str, my_str->m_Size);
+
         //my_str->m_Str[my_str->m_Size] = '\0';
         //IM_ASSERT(my_str->begin() == data->Buf);
         //my_str->resize(data->BufSize); // NB: On resizing calls, generally data->BufSize == data->BufTextLen + 1
