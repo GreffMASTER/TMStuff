@@ -42,10 +42,15 @@ bool is_picking = false;
 bool prev_is_mouse_down = false;
 bool ask_dump_chunks = false;
 bool doing_screenie = false;
-bool update_res = false;
 bool use_custom_screenie_resolution = false;
 int screenie_counter = 0;
 std::string screenie_name_buffer = "ScreenShot";
+float render_fps = 60.0f;
+float render_step = 0.0f;
+float replay_norm_time = 0.0f;
+bool doing_render = false;
+bool render_use_dds = false;
+
 CMwNod* pick_corpus_buffer = nullptr;
 CMwNod* pick_tree_buffer = nullptr;
 
@@ -80,6 +85,60 @@ static int ImGuiCFastStringResize_ScreenShotName(ImGuiInputTextCallbackData* dat
         realloc(my_str->m_Str, my_str->m_Size);
     }
     return 0;
+}
+
+void TakeScreenShotBMP()
+{
+    CMwNod* game = GbxTools::GetTrackManiaNod();
+    CMwStack* stacc_f = CMwStack::NewCMwStackFastString("Viewport.ScreenShotForceRes", game);
+    Bool* ScreenShotForceRes;
+
+    CMwStack* stacc_bmp = CMwStack::NewCMwStackFastString("Viewport.ScreenShotDoCaptureBMP", game);
+    if(stacc_bmp) {
+        if(use_custom_screenie_resolution) {
+            // Use custom resolution
+            CMwStack* stacc_f = CMwStack::NewCMwStackFastString("Viewport.ScreenShotForceRes", game);
+            if(stacc_f) {
+                Bool* ScreenShotForceRes;
+                int res_get_f = CMwNod::Param_Get(game, stacc_f, (void **)&ScreenShotForceRes);
+                if(res_get_f == 0)
+                    *ScreenShotForceRes = 1;
+                CMwNod::MwRelease(stacc_f);
+            }
+        }
+        // Capture BMP
+        CMwNod::Param_Set(game, stacc_bmp, nullptr);
+        CMwNod::MwRelease(stacc_bmp);
+        doing_screenie = true;
+        screenie_counter++;
+    }
+}
+
+void TakeScreenShotDDS()
+{
+    CMwNod* game = GbxTools::GetTrackManiaNod();
+    CMwStack* stacc_f = CMwStack::NewCMwStackFastString("Viewport.ScreenShotForceRes", game);
+    Bool* ScreenShotForceRes;
+
+    CMwStack* stacc_dds = CMwStack::NewCMwStackFastString("Viewport.ScreenShotDoCaptureDDS", game);
+    if(stacc_dds) {
+        if(use_custom_screenie_resolution) {
+            // Use custom resolution
+            CMwStack* stacc_f = CMwStack::NewCMwStackFastString("Viewport.ScreenShotForceRes", game);
+            if(stacc_f) {
+                Bool* ScreenShotForceRes;
+                int res_get_f = CMwNod::Param_Get(game, stacc_f, (void **)&ScreenShotForceRes);
+                if(res_get_f == 0)
+                    *ScreenShotForceRes = 1;
+                CMwNod::MwRelease(stacc_f);
+            }
+        }
+        // Capture DDS
+        CMwNod::Param_Set(game, stacc_dds, nullptr);
+        CMwNod::MwRelease(stacc_dds);
+        doing_screenie = true;
+        screenie_counter++;
+    }
 }
 
 TMStuff::FidExplorerWindow* FidExplorer;
@@ -151,6 +210,11 @@ LRESULT __stdcall WndProc(const HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                     str->Delete(1);
                     break;
                 }*/
+                case VK_ESCAPE: {
+                    if(doing_render)
+                        doing_render = false;
+                    break;
+                }
                 case VK_F3: {
                     TMStuff::m_Config->m_ShowUi = !TMStuff::m_Config->m_ShowUi;
                     break;
@@ -192,12 +256,6 @@ LRESULT __stdcall WndProc(const HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             return ImWndProcResult;
         }
     }*/
-
-    if(doing_screenie) {
-        printf("Screenie Done!\n");
-        doing_screenie = false;
-        update_res = true; // *sigh* actual update res must be done in Present()...
-    }
 
     return CallWindowProcA(oWndProc, hWnd, uMsg, wParam, lParam);
 }
@@ -410,9 +468,14 @@ HRESULT APIENTRY Present_hook(LPDIRECT3DDEVICE9 pD3D9, CONST RECT* pSourceRect,C
             logstr = logfststr->m_Str;
             printf("[Game] %s", logstr);
         }
-        if(update_res) {
-            update_res = false;
-            CMwNod* game = GbxTools::GetTrackManiaNod();
+
+        CMwNod* game = GbxTools::GetTrackManiaNod();
+        CMwNod* viewport = *(CMwNod**)((int)game + 0x44);
+        int viewport_sreenshot = *(int*)((int)viewport + 0xe8);
+
+        if(doing_screenie && viewport_sreenshot == 0) {
+            printf("Screenie Done! ");
+            doing_screenie = false;
 
             // Reset ScreenShotForceRes
             CMwStack* stacc_f = CMwStack::NewCMwStackFastString("Viewport.ScreenShotForceRes", game);
@@ -430,13 +493,41 @@ HRESULT APIENTRY Present_hook(LPDIRECT3DDEVICE9 pD3D9, CONST RECT* pSourceRect,C
                 int res_get_n = CMwNod::Param_Get(game, stacc_n, (void **)&ScreenShotFileName);
                 if(res_get_n == 0) {
                     std::string NewScreenShotName = screenie_name_buffer + std::to_string(screenie_counter);
-
+                    printf("%s", ScreenShotFileName->m_Str);
                     ScreenShotFileName->m_Size = NewScreenShotName.length() + 1;
                     realloc(ScreenShotFileName->m_Str, ScreenShotFileName->m_Size);
                     memcpy_s(ScreenShotFileName->m_Str, ScreenShotFileName->m_Size, NewScreenShotName.c_str(), ScreenShotFileName->m_Size);
+
                 }
             }
+            printf("\n");
         }
+
+        if(doing_render && viewport_sreenshot == 0) {
+            CMwNod* replay_viewer = *(CMwNod**)((int)game + 0xc4);
+
+            if(replay_norm_time >= 1) {
+                doing_render = false;
+                // make replay ui visible
+                CMwStack* stacc_switch_interface = CMwStack::NewCMwStackFastString("SwitchInterface", replay_viewer);
+
+                if(stacc_switch_interface) {
+                    int toggle_on = 1;
+                    CMwNod::Param_Set(replay_viewer, stacc_switch_interface, (void**)&toggle_on);
+                    CMwNod::MwRelease(stacc_switch_interface);
+                }
+            } else {
+                if(render_use_dds)
+                    TakeScreenShotDDS();
+                else
+                    TakeScreenShotBMP();
+                replay_norm_time += render_step;
+                CMwStack* stacc_replay_norm_time = CMwStack::NewCMwStackFastString("NormTime", replay_viewer);
+                CMwNod::Param_Set(replay_viewer, stacc_replay_norm_time, (void**)&replay_norm_time);
+                CMwNod::MwRelease(stacc_replay_norm_time);
+            }
+        }
+
         // Draw
         if(TMStuff::m_Config->m_ShowUi && !doing_screenie && pD3D9 && window)
         {
@@ -571,6 +662,12 @@ HRESULT APIENTRY Present_hook(LPDIRECT3DDEVICE9 pD3D9, CONST RECT* pSourceRect,C
 
                 if(TMStuff::m_Config->m_ShowScreenShot) {
                     CMwNod* game = GbxTools::GetTrackManiaNod();
+                    CMwNod* switcher = *(CMwNod**)((int)game + 0x130);
+
+                    int* switcher_mode = (int*)((int)switcher + 0x14);
+
+                    // Screenshot
+
                     ImGui::Begin("ScreenShot", (bool*)&TMStuff::m_Config->m_ShowScreenShot, ImGuiWindowFlags_AlwaysAutoResize);
                     CMwStack* stacc_n = CMwStack::NewCMwStackFastString("Viewport.ScreenShotFileName", game);
                     if(stacc_n) {
@@ -609,53 +706,69 @@ HRESULT APIENTRY Present_hook(LPDIRECT3DDEVICE9 pD3D9, CONST RECT* pSourceRect,C
                     }
                     // Capture
                     if(ImGui::Button("Capture (BMP)")) {
-                        CMwStack* stacc_f = CMwStack::NewCMwStackFastString("Viewport.ScreenShotForceRes", game);
-                        Bool* ScreenShotForceRes;
-
-                        CMwStack* stacc_bmp = CMwStack::NewCMwStackFastString("Viewport.ScreenShotDoCaptureBMP", game);
-                        if(stacc_bmp) {
-                            if(use_custom_screenie_resolution) {
-                                // Use custom resolution
-                                CMwStack* stacc_f = CMwStack::NewCMwStackFastString("Viewport.ScreenShotForceRes", game);
-                                if(stacc_f) {
-                                    Bool* ScreenShotForceRes;
-                                    int res_get_f = CMwNod::Param_Get(game, stacc_f, (void **)&ScreenShotForceRes);
-                                    if(res_get_f == 0)
-                                        *ScreenShotForceRes = 1;
-                                    CMwNod::MwRelease(stacc_f);
-                                }
-                            }
-                            // Capture BMP
-                            CMwNod::Param_Set(game, stacc_bmp, nullptr);
-                            CMwNod::MwRelease(stacc_bmp);
-                            doing_screenie = true;
-                            screenie_counter++;
-                        }
+                        TakeScreenShotBMP();
                     }
 
                     if(ImGui::Button("Capture (DDS)")) {
-                        CMwStack* stacc_dds = CMwStack::NewCMwStackFastString("Viewport.ScreenShotDoCaptureDDS", game);
-                        if(stacc_dds) {
-                            if(use_custom_screenie_resolution) {
-                                // Use custom resolution
-                                CMwStack* stacc_f = CMwStack::NewCMwStackFastString("Viewport.ScreenShotForceRes", game);
-                                if(stacc_f) {
-                                    Bool* ScreenShotForceRes;
-                                    int res_get_f = CMwNod::Param_Get(game, stacc_f, (void **)&ScreenShotForceRes);
-                                    if(res_get_f == 0)
-                                        *ScreenShotForceRes = 1;
-                                    CMwNod::MwRelease(stacc_f);
-                                }
-                            }
-                            // Capture DDS
-                            CMwNod::Param_Set(game, stacc_dds, nullptr);
-                            CMwNod::MwRelease(stacc_dds);
-                            doing_screenie = true;
-                            screenie_counter++;
-                        }
+                        TakeScreenShotDDS();
                     }
                     CMwNod::MwRelease(stacc_n);
+
+                    if(*switcher_mode == 4) {
+                        ImGui::InputFloat("Framerate", &render_fps, 1, 10, NULL, 0);
+                        if(ImGui::Button("Render BMP")) {
+                            render_use_dds = false;
+                            CMwNod* replay_viewer = *(CMwNod**)((int)game + 0xc4);
+                            CMwNod* replay_record = *(CMwNod**)((int)game + 0xc0);
+                            unsigned int duration = *(unsigned int*)((int)replay_record + 0x24);
+                            render_step = ( (1 / render_fps) / static_cast< float >( duration ) ) * 1000;
+
+                            CMwStack* stacc_replay_norm_time = CMwStack::NewCMwStackFastString("NormTime", replay_viewer);
+                            if(stacc_replay_norm_time) {
+                                float zero = 0.0f;
+                                CMwNod::Param_Set(replay_viewer, stacc_replay_norm_time, (void**)&zero);
+                                CMwNod::MwRelease(stacc_replay_norm_time);
+                                CMwStack* stacc_switch_interface = CMwStack::NewCMwStackFastString("SwitchInterface", replay_viewer);
+                                if(stacc_switch_interface) {
+                                    int toggle_off = 0;
+                                    CMwNod::Param_Set(replay_viewer, stacc_switch_interface, (void**)&toggle_off);
+                                    CMwNod::MwRelease(stacc_switch_interface);
+                                    replay_norm_time = 0;
+                                    doing_render = true;
+                                }
+                            }
+                        }
+                        if(ImGui::Button("Render DDS")) {
+                            render_use_dds = true;
+                            CMwNod* replay_viewer = *(CMwNod**)((int)game + 0xc4);
+                            CMwNod* replay_record = *(CMwNod**)((int)game + 0xc0);
+                            unsigned int duration = *(unsigned int*)((int)replay_record + 0x24);
+                            render_step = ( (1 / render_fps) / static_cast< float >( duration ) ) * 1000;
+
+                            CMwStack* stacc_replay_norm_time = CMwStack::NewCMwStackFastString("NormTime", replay_viewer);
+                            if(stacc_replay_norm_time) {
+                                float zero = 0.0f;
+                                CMwNod::Param_Set(replay_viewer, stacc_replay_norm_time, (void**)&zero);
+                                CMwNod::MwRelease(stacc_replay_norm_time);
+                                CMwStack* stacc_switch_interface = CMwStack::NewCMwStackFastString("SwitchInterface", replay_viewer);
+                                if(stacc_switch_interface) {
+                                    int toggle_off = 0;
+                                    CMwNod::Param_Set(replay_viewer, stacc_switch_interface, (void**)&toggle_off);
+                                    CMwNod::MwRelease(stacc_switch_interface);
+                                    replay_norm_time = 0;
+                                    doing_render = true;
+                                }
+                            }
+                        }
+                        if(doing_render) {
+                            if(ImGui::Button("Cancel")) {
+                                doing_render = false;
+                            }
+                        }
+                    }
                     ImGui::End();
+
+                    // Sceenshot
                 }
 
                 if(show_ids) {

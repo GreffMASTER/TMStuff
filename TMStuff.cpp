@@ -321,10 +321,18 @@ void DoClassAuto(CMwNod* nod, CMwClassInfo* nod_class_info, TMStuff::MwNodWindow
             case 0x09047007: //
             case 0x09047008: // w h a t
             case 0x0a10200c: // SandYach stuff
+            // CPlugVisual
+            case 0x0900600d: // Vec3 crap
+            case 0x0900600e: // Vec3 crap
+            case 0x0900600f: // wat
+            case 0x09006010: // Vec3 crap
+            case 0x09006011: // Vec3 crap
+            case 0x09006012: // Vec3 crap
                 continue;
             // type overrides
             case 0x0a031000: // CSceneToyVehicleMaterial.MaterialId
             case 0x24001006: // CTrackMania.VersionFeatures
+            case 0x24015000: // CTrackManiaSwitcher.Mode
             {
                 member_type = SMwMemberInfo::NATURAL;
                 break;
