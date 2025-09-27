@@ -48,6 +48,8 @@ std::string screenie_name_buffer = "ScreenShot";
 float render_fps = 60.0f;
 float render_step = 0.0f;
 float replay_norm_time = 0.0f;
+float render_start = 0.0f;
+float render_end = 0.0f;
 bool doing_render = false;
 bool render_use_dds = false;
 
@@ -506,7 +508,7 @@ HRESULT APIENTRY Present_hook(LPDIRECT3DDEVICE9 pD3D9, CONST RECT* pSourceRect,C
         if(doing_render && viewport_sreenshot == 0) {
             CMwNod* replay_viewer = *(CMwNod**)((int)game + 0xc4);
 
-            if(replay_norm_time >= 1) {
+            if(replay_norm_time >= render_end) {
                 doing_render = false;
                 // make replay ui visible
                 CMwStack* stacc_switch_interface = CMwStack::NewCMwStackFastString("SwitchInterface", replay_viewer);
@@ -715,25 +717,62 @@ HRESULT APIENTRY Present_hook(LPDIRECT3DDEVICE9 pD3D9, CONST RECT* pSourceRect,C
                     CMwNod::MwRelease(stacc_n);
 
                     if(*switcher_mode == 4) {
+                        CMwNod* replay_viewer = *(CMwNod**)((int)game + 0xc4);
+                        CMwNod* replay_record = *(CMwNod**)((int)game + 0xc0);
+
                         ImGui::InputFloat("Framerate", &render_fps, 1, 10, NULL, 0);
+                        ImGui::InputFloat("Start", &render_start, 0.01, 0.1, NULL, 0);
+                        ImGui::SameLine();
+                        if(ImGui::Button("SetStart")) {
+                            CMwStack* stacc = CMwStack::NewCMwStackFastString("NormTime", replay_viewer);
+                            if(stacc) {
+                                float* out = nullptr;
+                                CMwNod::Param_Get(replay_viewer, stacc, (void**)&out);
+                                if(out)
+                                    render_start = *out;
+                                CMwNod::MwRelease(stacc);
+                            }
+                        }
+                        ImGui::InputFloat("End", &render_end, 0.01, 0.1, NULL, 0);
+                        ImGui::SameLine();
+                        if(ImGui::Button("SetEnd")) {
+                            CMwStack* stacc = CMwStack::NewCMwStackFastString("NormTime", replay_viewer);
+                            if(stacc) {
+                                float* out = nullptr;
+                                CMwNod::Param_Get(replay_viewer, stacc, (void**)&out);
+                                if(out)
+                                    render_end = *out;
+                                CMwNod::MwRelease(stacc);
+                            }
+                        }
+
+                        if(render_end > 1)
+                            render_end = 1;
+                        if(render_start < 0)
+                            render_start = 0;
+                        if(render_end < render_start)
+                            render_end = render_start;
+
+                        unsigned int duration = *(unsigned int*)((int)replay_record + 0x24);
+                        float clip_len = (render_end - render_start) * static_cast< float >( duration );
+                        ImGui::Text("Clip length: %f", clip_len);
+
                         if(ImGui::Button("Render BMP")) {
                             render_use_dds = false;
-                            CMwNod* replay_viewer = *(CMwNod**)((int)game + 0xc4);
-                            CMwNod* replay_record = *(CMwNod**)((int)game + 0xc0);
-                            unsigned int duration = *(unsigned int*)((int)replay_record + 0x24);
+
+
                             render_step = ( (1 / render_fps) / static_cast< float >( duration ) ) * 1000;
 
                             CMwStack* stacc_replay_norm_time = CMwStack::NewCMwStackFastString("NormTime", replay_viewer);
                             if(stacc_replay_norm_time) {
-                                float zero = 0.0f;
-                                CMwNod::Param_Set(replay_viewer, stacc_replay_norm_time, (void**)&zero);
+                                replay_norm_time = render_start;
+                                CMwNod::Param_Set(replay_viewer, stacc_replay_norm_time, (void**)&replay_norm_time);
                                 CMwNod::MwRelease(stacc_replay_norm_time);
                                 CMwStack* stacc_switch_interface = CMwStack::NewCMwStackFastString("SwitchInterface", replay_viewer);
                                 if(stacc_switch_interface) {
                                     int toggle_off = 0;
                                     CMwNod::Param_Set(replay_viewer, stacc_switch_interface, (void**)&toggle_off);
                                     CMwNod::MwRelease(stacc_switch_interface);
-                                    replay_norm_time = 0;
                                     doing_render = true;
                                 }
                             }
@@ -747,15 +786,14 @@ HRESULT APIENTRY Present_hook(LPDIRECT3DDEVICE9 pD3D9, CONST RECT* pSourceRect,C
 
                             CMwStack* stacc_replay_norm_time = CMwStack::NewCMwStackFastString("NormTime", replay_viewer);
                             if(stacc_replay_norm_time) {
-                                float zero = 0.0f;
-                                CMwNod::Param_Set(replay_viewer, stacc_replay_norm_time, (void**)&zero);
+                                replay_norm_time = render_start;
+                                CMwNod::Param_Set(replay_viewer, stacc_replay_norm_time, (void**)&replay_norm_time);
                                 CMwNod::MwRelease(stacc_replay_norm_time);
                                 CMwStack* stacc_switch_interface = CMwStack::NewCMwStackFastString("SwitchInterface", replay_viewer);
                                 if(stacc_switch_interface) {
                                     int toggle_off = 0;
                                     CMwNod::Param_Set(replay_viewer, stacc_switch_interface, (void**)&toggle_off);
                                     CMwNod::MwRelease(stacc_switch_interface);
-                                    replay_norm_time = 0;
                                     doing_render = true;
                                 }
                             }

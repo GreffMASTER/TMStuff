@@ -314,6 +314,9 @@ void DoClassAuto(CMwNod* nod, CMwClassInfo* nod_class_info, TMStuff::MwNodWindow
         SMwMemberInfo::eType member_type = member->type;
         switch(member->memberId) // member id blacklist for broken virtual members (THANKS NANDO!)
         {
+            case 0x06001005: // ?
+            case 0x06001006: // ?
+            case 0x06001008: // ?
             case 0x07001011: // when style is empty, it tries to dereference a nullptr, fantastic (temporary, this nod is kinda important)
             case 0x07001012: // when trying to access it, it forcfully tries to get a value from an object that might be a nullptr, fantastic
             case 0x0904f010: // when trying to access it, it forcfully tries to get a value from an object that might be a nullptr... again, fantastic
@@ -328,6 +331,8 @@ void DoClassAuto(CMwNod* nod, CMwClassInfo* nod_class_info, TMStuff::MwNodWindow
             case 0x09006010: // Vec3 crap
             case 0x09006011: // Vec3 crap
             case 0x09006012: // Vec3 crap
+            case 0x0A00A001: // ?
+            case 0x0A00A002: // ?
                 continue;
             // type overrides
             case 0x0a031000: // CSceneToyVehicleMaterial.MaterialId
@@ -1342,6 +1347,7 @@ bool TMStuff::MwNodWindow::DoSetWindow()
                 if(this->m_TargetMember) {
                     if((this->m_TargetMember->flags & SMwMemberInfo::eFlags::VIRTUAL_ADD) && this->m_UseVirtualFunction) {
                         // Is virtual
+                        //CMwNod::Param_Add(this->m_ParentNod, , target);
                         GbxTools::VirtualParam_Add_SuperFast(this->m_ParentNod, (void**)target, 1, this->m_TargetMember);
 
                     } else {

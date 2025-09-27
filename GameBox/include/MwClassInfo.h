@@ -2,6 +2,7 @@
 #define __MWCLASSINFO_H__
 
 #include "GbxTypes.h"
+#include "FastArray.h"
 
 class CMwClassInfo
 {
@@ -9,8 +10,7 @@ class CMwClassInfo
         void** vtable;
         Natural m_ClassId;
         CMwClassInfo * m_ParentClass;
-        int u1; //
-        int u2; // array
+        SFastArray<CMwClassInfo*> m_Childs;
         char* m_ClassName;
         CMwClassInfo * m_NextClass;
         int u3;
