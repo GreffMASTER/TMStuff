@@ -154,9 +154,25 @@ LRESULT __stdcall WndProc(const HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
     if(uMsg == WM_DROPFILES) {
         HDROP hDrop = (HDROP)wParam;
-        //DragFinish(hDrop);
-        printf("Dropped files!");
+
+        char* droppedFileName = (char*)malloc(256);
+        UINT succ = DragQueryFileA(hDrop, 0, droppedFileName, 256);
+
+        printf("Dropped files! %s\n", droppedFileName);
+        CMwNod* drop_nod = nullptr;
+        int res = GbxTools::LoadNod2(&drop_nod, droppedFileName);
+        if(res != 1 || drop_nod == nullptr) {
+            printf("Failed to read \"%s\"\n", droppedFileName);
+        } else {
+            TMStuff::MwNodWindowAddress* new_window = new TMStuff::MwNodWindowAddress();
+            new_window->SetNod(drop_nod);
+            TMStuff::windowman.push_back(new_window);
+        }
+
+        free(droppedFileName);
+        DragFinish(hDrop);
     }
+
 
     if(uMsg == WM_KEYDOWN) {
         bool isRepeat = (lParam & 0xFF000000);
@@ -723,7 +739,7 @@ HRESULT APIENTRY Present_hook(LPDIRECT3DDEVICE9 pD3D9, CONST RECT* pSourceRect,C
                         ImGui::InputFloat("Framerate", &render_fps, 1, 10, NULL, 0);
                         ImGui::InputFloat("Start", &render_start, 0.01, 0.1, NULL, 0);
                         ImGui::SameLine();
-                        if(ImGui::Button("SetStart")) {
+                        if(ImGui::Button("SetS")) {
                             CMwStack* stacc = CMwStack::NewCMwStackFastString("NormTime", replay_viewer);
                             if(stacc) {
                                 float* out = nullptr;
@@ -733,15 +749,31 @@ HRESULT APIENTRY Present_hook(LPDIRECT3DDEVICE9 pD3D9, CONST RECT* pSourceRect,C
                                 CMwNod::MwRelease(stacc);
                             }
                         }
+                        ImGui::SameLine();
+                        if(ImGui::Button("GotoS")) {
+                            CMwStack* stacc = CMwStack::NewCMwStackFastString("NormTime", replay_viewer);
+                            if(stacc) {
+                                CMwNod::Param_Set(replay_viewer, stacc, (void**)&render_start);
+                                CMwNod::MwRelease(stacc);
+                            }
+                        }
                         ImGui::InputFloat("End", &render_end, 0.01, 0.1, NULL, 0);
                         ImGui::SameLine();
-                        if(ImGui::Button("SetEnd")) {
+                        if(ImGui::Button("SetE")) {
                             CMwStack* stacc = CMwStack::NewCMwStackFastString("NormTime", replay_viewer);
                             if(stacc) {
                                 float* out = nullptr;
                                 CMwNod::Param_Get(replay_viewer, stacc, (void**)&out);
                                 if(out)
                                     render_end = *out;
+                                CMwNod::MwRelease(stacc);
+                            }
+                        }
+                        ImGui::SameLine();
+                        if(ImGui::Button("GotoE")) {
+                            CMwStack* stacc = CMwStack::NewCMwStackFastString("NormTime", replay_viewer);
+                            if(stacc) {
+                                CMwNod::Param_Set(replay_viewer, stacc, (void**)&render_end);
                                 CMwNod::MwRelease(stacc);
                             }
                         }
@@ -1017,6 +1049,8 @@ HRESULT APIENTRY DrawIndexedPrimitive_hook(LPDIRECT3DDEVICE9 pD3D9, D3DPRIMITIVE
 
 char* cwd = 0;
 
+extern HINSTANCE g_inst;
+
 void APIENTRY PostQuitMessage_hook(int iExitCode)
 {
     if(TMStuff::m_Ready) // check cuz PostQuitMessage is called multiple times
@@ -1092,12 +1126,15 @@ DWORD WINAPI MainThread(LPVOID param) {
     CMwNodMain* main = GbxTools::GetMainNod();
     HWND hwnd = main->m_HWNDWindow;
 
+
     printf("InitHooks...\n");
     InitHooks(hwnd);
     printf("DONE\n");
     DragAcceptFiles(hwnd, TRUE);
 
+
     WindRacerMap();
+
 
     nod_window1 = new TMStuff::MwNodWindow(GbxTools::GetTrackManiaNod());
     FidExplorer = new TMStuff::FidExplorerWindow(GbxTools::GetGameDataDrive());
@@ -1105,5 +1142,9 @@ DWORD WINAPI MainThread(LPVOID param) {
     pick_shader = GbxTools::CreateByMwClassId(0x09026000);
     if(pick_shader)
         GbxTools::VirtualParam_Set_Fast(pick_shader, 0x09002002, (void**)&fillmode_wired);
+
+    //WPARAM (__stdcall* InitVideo)(HINSTANCE) = (WPARAM (__stdcall* )(HINSTANCE))0x00402c80;
+    //printf("Trying something...\n");
+    //InitVideo(GetModuleHandle(NULL));
     return 0;
 }

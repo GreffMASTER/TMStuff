@@ -3,10 +3,11 @@
 #include "minhook/include/MinHook.h"
 
 FILE* f;
+HINSTANCE g_inst;
 
 extern "C" DLL_EXPORT BOOL APIENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
-
+    g_inst = hinstDLL;
     switch (fdwReason)
     {
         case DLL_PROCESS_ATTACH:
